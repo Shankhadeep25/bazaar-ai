@@ -1,0 +1,16 @@
+{
+  "name": "@shopsense/rag-core",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsc -b --watch"
+  },
+  "dependencies": {
+    "@langchain/core": "^1.1.46",
+    "@langchain/google-genai": "^2.1.30",
+    "@qdrant/js-client-rest": "^1.18.0"
+  }
+}

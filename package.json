@@ -1,0 +1,24 @@
+{
+  "name": "shopsense",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NLP Shopping RAG Assistant for the Indian e-commerce market",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=apps/api",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "tsc --noEmit --workspaces",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.7.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  }
+}

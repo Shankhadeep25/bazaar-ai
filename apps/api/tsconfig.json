@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["node"],
+    "paths": {
+      "@shopsense/rag-core": ["../../packages/rag-core/src/index.ts"],
+      "@shopsense/cache": ["../../packages/cache/src/index.ts"],
+      "@shopsense/cache/*": ["../../packages/cache/src/*"],
+      "@shopsense/db": ["../../packages/db/src/index.ts"]
+    }
+  },
+  "references": [
+    { "path": "../../packages/rag-core" },
+    { "path": "../../packages/cache" },
+    { "path": "../../packages/db" }
+  ],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@shopsense/db",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsc -b --watch"
+  },
+  "dependencies": {
+    "mongoose": "^9.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.7.0"
+  }
+}

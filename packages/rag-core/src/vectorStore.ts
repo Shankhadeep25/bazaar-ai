@@ -4,7 +4,7 @@
 
 import { VectorStoreInterface, VectorEntry, VectorMatch } from './types.js';
 
-const VECTOR_DIM = 768; // Gemini text-embedding-004
+const VECTOR_DIM = 768; // Gemini embedding-2 with 768 truncation
 
 // Lazy-loaded Qdrant client
 let qdrantClientInstance: InstanceType<Awaited<ReturnType<typeof getQdrantClass>>> | null = null;
@@ -18,7 +18,11 @@ async function getClient(): Promise<InstanceType<Awaited<ReturnType<typeof getQd
   if (!qdrantClientInstance) {
     const QdrantClient = await getQdrantClass();
     const url = process.env.QDRANT_URL || 'http://localhost:6333';
-    qdrantClientInstance = new QdrantClient({ url });
+    const apiKey = process.env.QDRANT_API_KEY;
+    qdrantClientInstance = new QdrantClient({
+      url,
+      ...(apiKey && apiKey !== 'your_qdrant_api_key_here' ? { apiKey } : {}),
+    });
   }
   return qdrantClientInstance;
 }
@@ -40,15 +44,46 @@ export class QdrantVectorStore implements VectorStoreInterface {
 
       if (!exists) {
         await client.createCollection(this.collectionName, {
-          vectors: {
-            size: VECTOR_DIM,
-            distance: 'Cosine',
-          },
+          vectors: { size: VECTOR_DIM, distance: 'Cosine' },
         });
         console.log(`[Qdrant] Collection '${this.collectionName}' created (${VECTOR_DIM}-dim, Cosine)`);
       } else {
-        console.log(`[Qdrant] Collection '${this.collectionName}' already exists`);
+        // ── Validate existing collection config ───────────────────────
+        const info = await client.getCollection(this.collectionName);
+        const vectorsConfig = info.config?.params?.vectors;
+        console.log('[Qdrant] Existing collection vector config:', JSON.stringify(vectorsConfig));
+
+        // Named-vector collections have a Record shape; unnamed have { size, distance }
+        const isNamedVectors = vectorsConfig && typeof vectorsConfig === 'object'
+          && !('size' in vectorsConfig);
+        const existingDim = !isNamedVectors
+          ? (vectorsConfig as any)?.size
+          : (Object.values(vectorsConfig as Record<string, { size?: number }>)[0])?.size;
+
+        if (isNamedVectors || existingDim !== VECTOR_DIM) {
+          console.warn(
+            `[Qdrant] Config mismatch (namedVectors=${isNamedVectors}, dim=${existingDim}). ` +
+            `Recreating as unnamed ${VECTOR_DIM}-dim Cosine collection...`
+          );
+          await client.deleteCollection(this.collectionName);
+          await client.createCollection(this.collectionName, {
+            vectors: { size: VECTOR_DIM, distance: 'Cosine' },
+          });
+          console.log(`[Qdrant] Collection recreated (${VECTOR_DIM}-dim, Cosine, unnamed)`);
+        } else {
+          console.log(`[Qdrant] Collection '${this.collectionName}' OK (${existingDim}-dim, unnamed)`);
+        }
       }
+
+      // Ensure payload index for session_id
+      try {
+        await client.createPayloadIndex(this.collectionName, {
+          field_name: 'session_id',
+          field_schema: 'keyword',
+          wait: true,
+        });
+      } catch (_) { /* already exists */ }
+
     } catch (err) {
       console.error('[Qdrant] Failed to ensure collection:', err);
       throw err;
@@ -59,22 +94,41 @@ export class QdrantVectorStore implements VectorStoreInterface {
     if (vectors.length === 0) return;
     const client = await getClient();
 
-    const points = vectors.map((v) => ({
-      id: v.id,
-      vector: v.values,
-      payload: v.payload,
-    }));
+    const points = vectors.map((v) => {
+      // Ensure plain JS number[] — Gemini SDK can return a typed/array-like object
+      const vector = Array.from(v.values) as number[];
 
-    // Batch in groups of 100
+      // Pre-flight dimension check — catches mismatches before Qdrant rejects them
+      if (vector.length !== VECTOR_DIM) {
+        throw new Error(
+          `[Qdrant] Dimension mismatch: expected ${VECTOR_DIM}, got ${vector.length} (id=${v.id})`
+        );
+      }
+
+      return { id: v.id, vector, payload: v.payload };
+    });
+
     const batchSize = 100;
     for (let i = 0; i < points.length; i += batchSize) {
       const batch = points.slice(i, i + batchSize);
-      await client.upsert(this.collectionName, {
-        wait: true,
-        points: batch,
-      });
+      try {
+        await client.upsert(this.collectionName, { wait: true, points: batch });
+      } catch (err: any) {
+        // Capture full Qdrant error body for diagnosis
+        const detail = err?.data ?? err?.body ?? err?.response ?? err?.cause ?? null;
+        console.error('[Qdrant] Upsert FAILED. Full error:', {
+          message: err?.message,
+          status: err?.status,
+          detail: JSON.stringify(detail),
+          samplePoint: JSON.stringify({
+            id: batch[0]?.id,
+            vectorLen: batch[0]?.vector?.length,
+            payloadKeys: Object.keys(batch[0]?.payload ?? {}),
+          }),
+        });
+        throw err;
+      }
     }
-
     console.log(`[Qdrant] Upserted ${vectors.length} vectors`);
   }
 

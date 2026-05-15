@@ -1,6 +1,4 @@
-// ─── Chat Route ──────────────────────────────────────────────────────────────
-// POST /api/chat — RAG pipeline with SSE streaming
-
+import { randomUUID } from 'crypto';
 import { Router, Request, Response } from 'express';
 import { processStreamChat, processChat, UnifiedProduct } from '@shopsense/rag-core';
 import { ChatTurn, Session } from '@shopsense/db';
@@ -8,20 +6,15 @@ import { createAppError } from '../middleware/errorHandler';
 
 const router = Router();
 
-/**
- * POST /api/chat
- * Body: { sessionId, message, history? }
- * Streams response via SSE, then stores turn in MongoDB.
- */
 router.post('/', async (req: Request, res: Response) => {
-  try {
-    const { sessionId, message, history = [] } = req.body;
+  const { message, history = [] } = req.body;
+  const sessionId: string = req.body.sessionId?.trim() || randomUUID(); // ✅ trim + fallback
 
-    if (!sessionId || !message) {
-      throw createAppError('sessionId and message are required', 400);
+  try {
+    if (!message?.trim()) {
+      throw createAppError('message is required', 400);
     }
 
-    // Update session last active
     await Session.findOneAndUpdate(
       { sessionId },
       {
@@ -29,31 +22,21 @@ router.post('/', async (req: Request, res: Response) => {
         lastActiveAt: new Date(),
         expiresAt: new Date(Date.now() + 30 * 60 * 1000),
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
 
-    // Store user turn
-    await ChatTurn.create({
-      sessionId,
-      role: 'user',
-      content: message,
-      intent: '',
-      retrievedChunkIds: [],
-    });
-
-    // Check if client wants streaming
-    const wantsStream = req.headers.accept === 'text/event-stream';
+    // ✅ Fix: use includes() — handles "text/event-stream, */*" and missing header
+    const wantsStream = req.headers.accept?.includes('text/event-stream') ?? false;
 
     if (wantsStream) {
-      // SSE streaming response
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
         'X-Accel-Buffering': 'no',
       });
+      res.write(`data: ${JSON.stringify({ type: 'session', sessionId })}\n\n`);
 
-      // Send products event first if new_search
       const result = await processStreamChat(
         { sessionId, message, history },
         (token: string) => {
@@ -61,20 +44,15 @@ router.post('/', async (req: Request, res: Response) => {
         }
       );
 
-      // Send products if available
       if (result.products) {
-        res.write(
-          `data: ${JSON.stringify({ type: 'products', content: result.products })}\n\n`
-        );
+        res.write(`data: ${JSON.stringify({ type: 'products', content: result.products })}\n\n`);
       }
 
-      // Send done event
-      res.write(
-        `data: ${JSON.stringify({ type: 'done', intent: result.intent })}\n\n`
-      );
+      res.write(`data: ${JSON.stringify({ type: 'done', intent: result.intent })}\n\n`);
       res.end();
 
-      // Store assistant turn (after response sent)
+      // ✅ Fix: persist turns AFTER successful response
+      await ChatTurn.create({ sessionId, role: 'user', content: message, intent: '', retrievedChunkIds: [] });
       await ChatTurn.create({
         sessionId,
         role: 'assistant',
@@ -83,22 +61,17 @@ router.post('/', async (req: Request, res: Response) => {
         retrievedChunkIds: result.retrievedChunkIds,
       });
 
-      // Update session with product IDs
       if (result.products) {
         await Session.findOneAndUpdate(
           { sessionId },
-          {
-            $addToSet: {
-              productIds: { $each: result.products.map((p: UnifiedProduct) => p.id) },
-            },
-          }
+          { $addToSet: { productIds: { $each: result.products.map((p: UnifiedProduct) => p.id) } } }
         );
       }
     } else {
-      // Regular JSON response
       const result = await processChat({ sessionId, message, history });
 
-      // Store assistant turn
+      // ✅ Fix: persist turns AFTER successful response
+      await ChatTurn.create({ sessionId, role: 'user', content: message, intent: '', retrievedChunkIds: [] });
       await ChatTurn.create({
         sessionId,
         role: 'assistant',
@@ -110,21 +83,26 @@ router.post('/', async (req: Request, res: Response) => {
       if (result.products) {
         await Session.findOneAndUpdate(
           { sessionId },
-          {
-            $addToSet: {
-              productIds: { $each: result.products.map((p: UnifiedProduct) => p.id) },
-            },
-          }
+          { $addToSet: { productIds: { $each: result.products.map((p: UnifiedProduct) => p.id) } } }
         );
       }
 
       res.json({ success: true, data: result });
     }
   } catch (err) {
-    const error = err as Error;
-    console.error('[Chat] Error:', error.message);
+    const error = err as any;
+    console.error('[Chat] Error:', error.stack || error.message);
+
     if (!res.headersSent) {
-      res.status(500).json({ success: false, error: error.message });
+      // ✅ Fix: always surface actionable error details
+      res.status(error.statusCode ?? 500).json({
+        success: false,
+        error: error.message,
+        ...(process.env.NODE_ENV !== 'production' && {
+          stack: error.stack,
+          details: error.response?.data ?? error.cause ?? null,
+        }),
+      });
     }
   }
 });

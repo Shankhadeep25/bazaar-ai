@@ -1,7 +1,7 @@
 // ─── RAG Pipeline ────────────────────────────────────────────────────────────
 // Orchestrates: intent detection → product fetch → chunk → embed → retrieve → LLM response
 
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import Groq from 'groq-sdk';
 import {
   ChatMessage,
   ChatRequest,
@@ -20,19 +20,16 @@ import { QdrantVectorStore } from './vectorStore';
 const fetcher = new MockProductFetcher();
 const vectorStore = new QdrantVectorStore();
 
-let chatLLM: ChatGoogleGenerativeAI | null = null;
+// ─── Groq Chat Client ────────────────────────────────────────────────────────
+// Using Groq (free tier: 14,400 req/day, 30 RPM) for chat generation.
+// Google Gemini is kept ONLY for embeddings (working fine).
+let groqClient: Groq | null = null;
 
-function getChatLLM(): ChatGoogleGenerativeAI {
-  if (!chatLLM) {
-    chatLLM = new ChatGoogleGenerativeAI({
-      model: DEFAULT_RAG_CONFIG.chatModel,
-      apiKey: process.env.GOOGLE_API_KEY,
-      temperature: 0.3,
-      maxOutputTokens: 1024,
-      streaming: true,
-    });
+function getGroq(): Groq {
+  if (!groqClient) {
+    groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
   }
-  return chatLLM;
+  return groqClient;
 }
 
 const SYSTEM_PROMPT = `You are ShopSense, an AI shopping assistant for the Indian market.
@@ -50,13 +47,17 @@ async function indexProducts(
   sessionId: string
 ): Promise<string[]> {
   const chunks = chunkProducts(products);
+  console.log(`[RAG] indexProducts: ${chunks.length} chunks created`);
 
   // Only embed specs and reviews chunks (not metadata)
   const embeddableChunks = chunks.filter(
     (c) => c.chunk_type === 'specs' || c.chunk_type === 'reviews'
   );
   const texts = embeddableChunks.map((c) => c.content);
+  console.log(`[RAG] indexProducts: embedding ${texts.length} texts (total chars: ${texts.reduce((a, t) => a + t.length, 0)})`);
+
   const embeddings = await embedTexts(texts);
+  console.log(`[RAG] indexProducts: embeddings done, got ${embeddings.length} vectors`);
 
   // Build vector entries
   const vectors: VectorEntry[] = embeddableChunks.map((chunk, i) => ({
@@ -73,7 +74,9 @@ async function indexProducts(
     },
   }));
 
+  console.log(`[RAG] indexProducts: upserting ${vectors.length} vectors to Qdrant...`);
   await vectorStore.upsert(vectors);
+  console.log(`[RAG] indexProducts: upsert done`);
 
   // Also store metadata chunks as context (not embedded in vector store)
   const metadataChunks = chunks.filter((c) => c.chunk_type === 'metadata');
@@ -155,18 +158,26 @@ export async function processChat(request: ChatRequest): Promise<ChatResponse> {
     console.log(`[RAG] Fetched ${products.length} products`);
 
     if (products.length > 0) {
-      const indexedIds = await indexProducts(products, sessionId);
-      chunkIds = indexedIds;
-      console.log(`[RAG] Indexed ${indexedIds.length} chunks`);
+      try {
+        const indexedIds = await indexProducts(products, sessionId);
+        chunkIds = indexedIds;
+        console.log(`[RAG] Indexed ${indexedIds.length} chunks`);
+      } catch (indexErr) {
+        const e = indexErr as any;
+        console.error(`[RAG] indexProducts FAILED:`, e.message, e.response?.data || e.cause || '');
+        throw indexErr;
+      }
     }
   }
 
   // Step 3: Retrieve relevant context
+  console.log('[RAG] Step 3: Retrieving context...');
   const { context, chunkIds: retrievedIds } = await retrieveContext(
     message,
     sessionId
   );
   chunkIds = [...chunkIds, ...retrievedIds];
+  console.log(`[RAG] Step 3 done. Context length: ${context.length}`);
 
   // Step 4: Build full context with metadata
   let fullContext = context;
@@ -175,24 +186,29 @@ export async function processChat(request: ChatRequest): Promise<ChatResponse> {
     fullContext = `Available Products:\n${metadataCtx}\n\n---\n\nDetailed Information:\n${context}`;
   }
 
-  // Step 5: Build conversation for LLM
+  // Step 5: Build conversation for Groq (OpenAI-compatible format)
   const recentHistory = history.slice(-DEFAULT_RAG_CONFIG.maxHistoryTurns);
-  const messages = [
-    { role: 'system' as const, content: SYSTEM_PROMPT },
-    { role: 'system' as const, content: `Context:\n${fullContext || 'No product data available yet. Ask the user what they are looking for.'}` },
+  const systemContent = `${SYSTEM_PROMPT}\n\nContext:\n${fullContext || 'No product data available yet. Ask the user what they are looking for.'}`;
+
+  const messages: Groq.Chat.ChatCompletionMessageParam[] = [
+    { role: 'system', content: systemContent },
     ...recentHistory.map((h) => ({
-      role: h.role as 'user' | 'assistant',
+      role: (h.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
       content: h.content,
     })),
-    { role: 'user' as const, content: message },
+    { role: 'user', content: message },
   ];
 
-  // Step 6: Call Gemini LLM
-  const llm = getChatLLM();
-  const response = await llm.invoke(messages);
-  const responseText = typeof response.content === 'string'
-    ? response.content
-    : 'I encountered an issue generating a response. Please try again.';
+  // Step 6: Call Groq LLM
+  console.log('[RAG] Step 6: Calling Groq LLM...');
+  const completion = await getGroq().chat.completions.create({
+    model: DEFAULT_RAG_CONFIG.chatModel,
+    messages,
+    temperature: 0.3,
+    max_tokens: 1024,
+  });
+  console.log('[RAG] Step 6 done.');
+  const responseText = completion.choices[0]?.message?.content ?? 'No response generated.';
 
   return {
     sessionId,
@@ -235,22 +251,28 @@ export async function processStreamChat(
   }
 
   const recentHistory = history.slice(-DEFAULT_RAG_CONFIG.maxHistoryTurns);
-  const messages = [
-    { role: 'system' as const, content: SYSTEM_PROMPT },
-    { role: 'system' as const, content: `Context:\n${fullContext || 'No product data available yet.'}` },
+  const systemContent = `${SYSTEM_PROMPT}\n\nContext:\n${fullContext || 'No product data available yet.'}`;
+
+  const messages: Groq.Chat.ChatCompletionMessageParam[] = [
+    { role: 'system', content: systemContent },
     ...recentHistory.map((h) => ({
-      role: h.role as 'user' | 'assistant',
+      role: (h.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
       content: h.content,
     })),
-    { role: 'user' as const, content: message },
+    { role: 'user', content: message },
   ];
 
-  const llm = getChatLLM();
-  const stream = await llm.stream(messages);
+  const stream = await getGroq().chat.completions.create({
+    model: DEFAULT_RAG_CONFIG.chatModel,
+    messages,
+    temperature: 0.3,
+    max_tokens: 1024,
+    stream: true,
+  });
 
   let fullResponse = '';
   for await (const chunk of stream) {
-    const token = typeof chunk.content === 'string' ? chunk.content : '';
+    const token = chunk.choices[0]?.delta?.content ?? '';
     if (token) {
       fullResponse += token;
       onToken(token);

@@ -152,5 +152,5 @@ export const DEFAULT_RAG_CONFIG: RAGConfig = {
   topK: 8,
   maxHistoryTurns: 6,
   embeddingModel: 'text-embedding-004',
-  chatModel: 'gemini-2.0-flash',
+  chatModel: 'llama-3.3-70b-versatile', // Groq free tier: 14,400 req/day
 };

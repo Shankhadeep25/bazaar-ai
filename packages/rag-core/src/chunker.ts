@@ -2,10 +2,23 @@
 // Splits a UnifiedProduct into tagged chunks for embedding and retrieval.
 
 import { UnifiedProduct, ProductChunk } from './types';
-import { createHash } from 'crypto';
+import { randomUUID, createHash } from 'crypto';
 
+
+// Deterministic UUID (v4-shaped) for Qdrant — forces RFC 4122 version=4 and variant=1 bits
 function makeChunkId(productId: string, chunkType: string): string {
-  return createHash('md5').update(`${productId}:${chunkType}`).digest('hex');
+  const hash = createHash('sha256')
+    .update(`${productId}:${chunkType}`)
+    .digest('hex');
+  // Force version nibble = '4' (bits 12-15 of time_hi_and_version)
+  // Force variant nibble = '8' (10xxxxxx — variant 1)
+  return [
+    hash.slice(0, 8),
+    hash.slice(8, 12),
+    '4' + hash.slice(13, 16),        // version 4
+    (parseInt(hash[16], 16) & 0x3 | 0x8).toString(16) + hash.slice(17, 20), // variant 10xx
+    hash.slice(20, 32),
+  ].join('-');
 }
 
 /**

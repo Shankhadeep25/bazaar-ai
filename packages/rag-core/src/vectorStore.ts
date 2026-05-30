@@ -19,9 +19,11 @@ async function getClient(): Promise<InstanceType<Awaited<ReturnType<typeof getQd
     const QdrantClient = await getQdrantClass();
     const url = process.env.QDRANT_URL || 'http://localhost:6333';
     const apiKey = process.env.QDRANT_API_KEY;
+    const timeoutMs = parseInt(process.env.QDRANT_TIMEOUT_MS || '15000', 10);
     qdrantClientInstance = new QdrantClient({
       url,
       ...(apiKey && apiKey !== 'your_qdrant_api_key_here' ? { apiKey } : {}),
+      timeout: timeoutMs,
     });
   }
   return qdrantClientInstance;

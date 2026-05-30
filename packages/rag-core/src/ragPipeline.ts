@@ -23,13 +23,27 @@ const vectorStore = new QdrantVectorStore();
 // ─── Groq Chat Client ────────────────────────────────────────────────────────
 // Using Groq (free tier: 14,400 req/day, 30 RPM) for chat generation.
 // Google Gemini is kept ONLY for embeddings (working fine).
+const GROQ_TIMEOUT_MS = parseInt(process.env.GROQ_TIMEOUT_MS || '30000', 10);
+
 let groqClient: Groq | null = null;
 
 function getGroq(): Groq {
   if (!groqClient) {
-    groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    groqClient = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
+      timeout: GROQ_TIMEOUT_MS,
+    });
   }
   return groqClient;
+}
+
+/**
+ * Throws if the AbortSignal has been triggered (client disconnected).
+ */
+function checkAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw new Error('[RAG] Request aborted by client');
+  }
 }
 
 const SYSTEM_PROMPT = `You are ShopSense, an AI shopping assistant for the Indian market.
@@ -139,10 +153,14 @@ function buildMetadataContext(products: UnifiedProduct[]): string {
 /**
  * Main RAG pipeline entry point.
  */
-export async function processChat(request: ChatRequest): Promise<ChatResponse> {
+export async function processChat(
+  request: ChatRequest,
+  signal?: AbortSignal
+): Promise<ChatResponse> {
   const { sessionId, message, history } = request;
 
   // Step 1: Detect intent
+  checkAborted(signal);
   const intent = await detectIntent(message, history);
   console.log(`[RAG] Intent: ${intent} | Message: "${message.slice(0, 60)}..."`);
 
@@ -151,6 +169,7 @@ export async function processChat(request: ChatRequest): Promise<ChatResponse> {
 
   // Step 2: If new_search, fetch and index products
   if (intent === 'new_search') {
+    checkAborted(signal);
     const parsed = parseQuery(message);
     console.log(`[RAG] Parsed: category=${parsed.category}, budget=${parsed.budget}, brands=${parsed.brands.join(',')}`);
 
@@ -158,6 +177,7 @@ export async function processChat(request: ChatRequest): Promise<ChatResponse> {
     console.log(`[RAG] Fetched ${products.length} products`);
 
     if (products.length > 0) {
+      checkAborted(signal);
       try {
         const indexedIds = await indexProducts(products, sessionId);
         chunkIds = indexedIds;
@@ -171,6 +191,7 @@ export async function processChat(request: ChatRequest): Promise<ChatResponse> {
   }
 
   // Step 3: Retrieve relevant context
+  checkAborted(signal);
   console.log('[RAG] Step 3: Retrieving context...');
   const { context, chunkIds: retrievedIds } = await retrieveContext(
     message,
@@ -187,6 +208,7 @@ export async function processChat(request: ChatRequest): Promise<ChatResponse> {
   }
 
   // Step 5: Build conversation for Groq (OpenAI-compatible format)
+  checkAborted(signal);
   const recentHistory = history.slice(-DEFAULT_RAG_CONFIG.maxHistoryTurns);
   const systemContent = `${SYSTEM_PROMPT}\n\nContext:\n${fullContext || 'No product data available yet. Ask the user what they are looking for.'}`;
 
@@ -199,14 +221,17 @@ export async function processChat(request: ChatRequest): Promise<ChatResponse> {
     { role: 'user', content: message },
   ];
 
-  // Step 6: Call Groq LLM
+  // Step 6: Call Groq LLM (with abort signal)
   console.log('[RAG] Step 6: Calling Groq LLM...');
-  const completion = await getGroq().chat.completions.create({
-    model: DEFAULT_RAG_CONFIG.chatModel,
-    messages,
-    temperature: 0.3,
-    max_tokens: 1024,
-  });
+  const completion = await getGroq().chat.completions.create(
+    {
+      model: DEFAULT_RAG_CONFIG.chatModel,
+      messages,
+      temperature: 0.3,
+      max_tokens: 1024,
+    },
+    { signal: signal as any }
+  );
   console.log('[RAG] Step 6 done.');
   const responseText = completion.choices[0]?.message?.content ?? 'No response generated.';
 
@@ -224,24 +249,29 @@ export async function processChat(request: ChatRequest): Promise<ChatResponse> {
  */
 export async function processStreamChat(
   request: ChatRequest,
-  onToken: (token: string) => void
+  onToken: (token: string) => void,
+  signal?: AbortSignal
 ): Promise<ChatResponse> {
   const { sessionId, message, history } = request;
 
+  checkAborted(signal);
   const intent = await detectIntent(message, history);
   let products: UnifiedProduct[] | undefined;
   let chunkIds: string[] = [];
 
   if (intent === 'new_search') {
+    checkAborted(signal);
     const parsed = parseQuery(message);
     products = await fetcher.fetch(parsed);
 
     if (products.length > 0) {
+      checkAborted(signal);
       const indexedIds = await indexProducts(products, sessionId);
       chunkIds = indexedIds;
     }
   }
 
+  checkAborted(signal);
   const { context, chunkIds: retrievedIds } = await retrieveContext(message, sessionId);
   chunkIds = [...chunkIds, ...retrievedIds];
 
@@ -250,6 +280,7 @@ export async function processStreamChat(
     fullContext = `Available Products:\n${buildMetadataContext(products)}\n\n---\n\nDetailed Information:\n${context}`;
   }
 
+  checkAborted(signal);
   const recentHistory = history.slice(-DEFAULT_RAG_CONFIG.maxHistoryTurns);
   const systemContent = `${SYSTEM_PROMPT}\n\nContext:\n${fullContext || 'No product data available yet.'}`;
 
@@ -262,16 +293,20 @@ export async function processStreamChat(
     { role: 'user', content: message },
   ];
 
-  const stream = await getGroq().chat.completions.create({
-    model: DEFAULT_RAG_CONFIG.chatModel,
-    messages,
-    temperature: 0.3,
-    max_tokens: 1024,
-    stream: true,
-  });
+  const stream = await getGroq().chat.completions.create(
+    {
+      model: DEFAULT_RAG_CONFIG.chatModel,
+      messages,
+      temperature: 0.3,
+      max_tokens: 1024,
+      stream: true,
+    },
+    { signal: signal as any }
+  );
 
   let fullResponse = '';
   for await (const chunk of stream) {
+    checkAborted(signal);
     const token = chunk.choices[0]?.delta?.content ?? '';
     if (token) {
       fullResponse += token;

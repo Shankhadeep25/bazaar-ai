@@ -89,27 +89,37 @@ export async function detectIntent(
   const ruleResult = detectIntentRuleBased(message, history.length > 0);
   if (ruleResult) return ruleResult;
 
-  // LLM fallback for ambiguous queries
+  // LLM fallback for ambiguous queries (with 10s timeout)
   try {
     const model = getLLM();
-    const response = await model.invoke([
-      {
-        role: 'system',
-        content:
-          'Classify this user message as exactly one of: new_search, follow_up, comparison, clarification. Reply with ONLY the classification word.',
-      },
-      {
-        role: 'user',
-        content: `Previous conversation exists: ${history.length > 0 ? 'yes' : 'no'}\nMessage: "${message}"`,
-      },
-    ]);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
 
-    const classification = (typeof response.content === 'string' ? response.content : '')
-      .trim()
-      .toLowerCase() as Intent;
+    try {
+      const response = await model.invoke(
+        [
+          {
+            role: 'system',
+            content:
+              'Classify this user message as exactly one of: new_search, follow_up, comparison, clarification. Reply with ONLY the classification word.',
+          },
+          {
+            role: 'user',
+            content: `Previous conversation exists: ${history.length > 0 ? 'yes' : 'no'}\nMessage: "${message}"`,
+          },
+        ],
+        { signal: controller.signal as any }
+      );
 
-    if (['new_search', 'follow_up', 'comparison', 'clarification'].includes(classification)) {
-      return classification;
+      const classification = (typeof response.content === 'string' ? response.content : '')
+        .trim()
+        .toLowerCase() as Intent;
+
+      if (['new_search', 'follow_up', 'comparison', 'clarification'].includes(classification)) {
+        return classification;
+      }
+    } finally {
+      clearTimeout(timeout);
     }
   } catch (err) {
     console.warn('[IntentDetector] LLM fallback failed:', err);

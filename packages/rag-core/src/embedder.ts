@@ -15,6 +15,24 @@ function getGenerativeAI(): GoogleGenerativeAI {
   return genAI;
 }
 
+const EMBED_TIMEOUT_MS = parseInt(process.env.EMBED_TIMEOUT_MS || '20000', 10);
+
+/**
+ * Run a promise with a timeout. Rejects with an error if the timeout fires first.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`[Embedder] ${label} timed out after ${ms}ms`)),
+      ms
+    );
+    promise.then(
+      (val) => { clearTimeout(timer); resolve(val); },
+      (err) => { clearTimeout(timer); reject(err); }
+    );
+  });
+}
+
 /**
  * Embed a single text string. Uses L2 cache.
  */
@@ -25,13 +43,17 @@ export async function embedText(text: string): Promise<number[]> {
   const cached = await getCachedEmbedding(hash);
   if (cached) return cached;
 
-  // Generate embedding
+  // Generate embedding (with timeout)
   const ai = getGenerativeAI();
   const model = ai.getGenerativeModel({ model: 'gemini-embedding-2' });
-  const result = await model.embedContent({
-    content: { role: 'user', parts: [{ text }] },
-    outputDimensionality: 768,
-  } as any);
+  const result = await withTimeout(
+    model.embedContent({
+      content: { role: 'user', parts: [{ text }] },
+      outputDimensionality: 768,
+    } as any),
+    EMBED_TIMEOUT_MS,
+    'embedText'
+  );
   const vector = result.embedding.values;
 
   // Cache the result
@@ -60,18 +82,22 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
     }
   }
 
-  // Batch embed uncached texts
+  // Batch embed uncached texts (with timeout)
   if (uncachedTexts.length > 0) {
     const ai = getGenerativeAI();
     const model = ai.getGenerativeModel({ model: 'gemini-embedding-2' });
     
     // Google API batchEmbedContents takes { requests: [{content: ...}] }
-    const result = await model.batchEmbedContents({
-      requests: uncachedTexts.map((text) => ({
-        content: { role: 'user', parts: [{ text }] },
-        outputDimensionality: 768,
-      } as any)),
-    });
+    const result = await withTimeout(
+      model.batchEmbedContents({
+        requests: uncachedTexts.map((text) => ({
+          content: { role: 'user', parts: [{ text }] },
+          outputDimensionality: 768,
+        } as any)),
+      }),
+      EMBED_TIMEOUT_MS,
+      'batchEmbedContents'
+    );
 
     const vectors = result.embeddings.map((e) => e.values);
 

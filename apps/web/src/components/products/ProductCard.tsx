@@ -1,6 +1,6 @@
 // ─── Product Card ────────────────────────────────────────────────────────────
 
-import { Star, ExternalLink, GitCompareArrows, Package } from 'lucide-react';
+import { Star, ExternalLink, GitCompareArrows } from 'lucide-react';
 import type { UnifiedProduct } from '../../lib/types';
 import { formatINR, formatRating, formatReviewCount } from '../../lib/formatters';
 

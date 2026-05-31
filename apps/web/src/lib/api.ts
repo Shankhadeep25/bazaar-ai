@@ -20,6 +20,7 @@ async function apiFetch<T>(
   const url = `${API_BASE}${path}`;
 
   const response = await fetch(url, {
+    credentials: 'include', // <--- Required for sending auth cookies across origins
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -73,6 +74,7 @@ export function buildChatSSERequest(
     url: `${API_BASE}/chat`,
     init: {
       method: 'POST',
+      credentials: 'include', // <--- Required for sending auth cookies
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',

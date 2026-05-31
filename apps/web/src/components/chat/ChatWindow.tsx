@@ -218,13 +218,11 @@ export default function ChatWindow() {
                   and get personalized product recommendations instantly.
                 </p>
               </div>
-
-              <SuggestedPrompts onSelect={handleSend} />
             </div>
           ) : (
             /* ─── Chat Thread ───── */
             <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
-              <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+              <div className="max-w-3xl mx-auto px-4 py-6 space-y-6 pb-[120px]">
                 {messages.map((msg) => (
                   <MessageBubble key={msg.id} message={msg} />
                 ))}
@@ -262,13 +260,18 @@ export default function ChatWindow() {
             </div>
           )}
 
-          {/* Chat Input */}
-          <ChatInput
-            onSend={handleSend}
-            onStop={stopStreaming}
-            isStreaming={isStreaming}
-            placeholder={hasMessages ? 'Follow up or ask something new…' : animatedPlaceholder}
-          />
+          {/* Chat Input Container */}
+          <div className="sticky bottom-0 w-full z-10 pt-2 bg-[rgba(10,10,15,0.8)] backdrop-blur-md border-t border-[rgba(255,255,255,0.05)]">
+            <SuggestedPrompts onSelect={handleSend} />
+            <div className="px-2 pb-2 pt-1 max-w-3xl mx-auto">
+              <ChatInput
+                onSend={handleSend}
+                onStop={stopStreaming}
+                isStreaming={isStreaming}
+                placeholder="Ask me anything — 'wireless headphones under ₹2000'..."
+              />
+            </div>
+          </div>
         </div>
       </main>
 

@@ -6,14 +6,11 @@ import {
 } from 'lucide-react';
 
 const SUGGESTED_PROMPTS = [
-  { text: 'Best laptop under ₹60k for video editing', icon: Laptop },
-  { text: 'Noise cancelling headphones under ₹30k', icon: Headphones },
-  { text: 'Compare OnePlus 12 and Samsung S24 Ultra', icon: GitCompareArrows },
-  { text: 'Budget phone with best camera under ₹25k', icon: Camera },
-  { text: 'Sony headphones vs AirPods Pro — which is better?', icon: Headphones },
-  { text: 'Tablet for college students under ₹55k', icon: Tablet },
-  { text: 'Gaming laptop with RTX 4060', icon: Gamepad2 },
-  { text: 'Best phone for battery life', icon: BatteryFull },
+  { text: 'Best laptops under ₹50K', icon: Laptop },
+  { text: 'Wireless earbuds', icon: Headphones },
+  { text: 'Budget smartphones', icon: Smartphone },
+  { text: 'Gaming chairs', icon: Gamepad2 },
+  { text: 'Air fryers', icon: BatteryFull },
 ];
 
 interface SuggestedPromptsProps {
@@ -22,23 +19,17 @@ interface SuggestedPromptsProps {
 
 export default function SuggestedPrompts({ onSelect }: SuggestedPromptsProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto px-4">
+    <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2 px-4 w-full" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       {SUGGESTED_PROMPTS.map((prompt) => {
-        const Icon = prompt.icon;
         return (
           <button
             key={prompt.text}
             onClick={() => onSelect(prompt.text)}
-            className="group flex items-center gap-3 px-4 py-3 rounded-xl
-                       bg-surface/50 border border-border hover:border-accent/50
-                       hover:bg-accent/5 transition-all duration-200
-                       text-left text-sm text-muted hover:text-primary"
+            className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full
+                       bg-[rgba(124,58,237,0.2)] border border-[#7c3aed] hover:bg-[rgba(124,58,237,0.3)] 
+                       transition-all duration-200 text-xs text-white whitespace-nowrap"
           >
-            <span className="shrink-0 p-2 rounded-lg bg-accent/10 text-accent
-                            group-hover:bg-accent/20 transition-colors">
-              <Icon size={16} />
-            </span>
-            <span className="line-clamp-2">{prompt.text}</span>
+            {prompt.text}
           </button>
         );
       })}

@@ -247,14 +247,14 @@ export default function LoginPage() {
       const result = await signIn.email({
         email: email.trim(),
         password,
-        callbackURL: '/',
+        callbackURL: '/home',
       });
 
       if (result.error) {
         setError(result.error.message ?? 'Invalid email or password.');
       } else {
         toast.success('Welcome back! 👋');
-        navigate('/', { replace: true });
+        navigate('/home', { replace: true });
       }
     } catch {
       setError('Something went wrong. Please try again.');
@@ -283,14 +283,14 @@ export default function LoginPage() {
         name: name.trim(),
         email: email.trim(),
         password,
-        callbackURL: '/',
+        callbackURL: '/home',
       });
 
       if (result.error) {
         setError(result.error.message ?? 'Could not create account.');
       } else {
         toast.success('Account created! Welcome to ShopSense 🛍️');
-        navigate('/', { replace: true });
+        navigate('/home', { replace: true });
       }
     } catch {
       setError('Something went wrong. Please try again.');
@@ -306,7 +306,7 @@ export default function LoginPage() {
     try {
       await signIn.social({
         provider: 'google',
-        callbackURL: window.location.origin + '/',
+        callbackURL: window.location.origin + '/home',
       });
     } catch {
       setError('Google sign-in failed. Please try again.');

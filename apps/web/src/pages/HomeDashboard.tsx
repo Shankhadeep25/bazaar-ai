@@ -1,17 +1,14 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, ShoppingBag } from 'lucide-react';
 import { signOut } from '../lib/authClient';
 
 const CATEGORIES = [
-  { icon: '📱', label: 'Electronics', color: 'rgba(59, 130, 246, 0.5)' }, // blue
-  { icon: '🎧', label: 'Gadgets', color: 'rgba(168, 85, 247, 0.5)' }, // purple
-  { icon: '👟', label: 'Fashion', color: 'rgba(236, 72, 153, 0.5)' }, // pink
-  { icon: '🏠', label: 'Home & Kitchen', color: 'rgba(245, 158, 11, 0.5)' }, // amber
-  { icon: '📚', label: 'Books', color: 'rgba(16, 185, 129, 0.5)' }, // emerald
-  { icon: '🎮', label: 'Gaming', color: 'rgba(239, 68, 68, 0.5)' }, // red
-  { icon: '💄', label: 'Beauty', color: 'rgba(217, 70, 239, 0.5)' }, // fuchsia
-  { icon: '🧸', label: 'Toys & Kids', color: 'rgba(14, 165, 233, 0.5)' }, // sky
+  { id: 'smartphones', name: 'Smartphones', emoji: '📱' },
+  { id: 'laptops', name: 'Laptops & PCs', emoji: '💻' },
+  { id: 'audio', name: 'Headphones & Audio', emoji: '🎧' },
+  { id: 'cameras', name: 'Cameras', emoji: '📷' },
+  { id: 'wearables', name: 'Smartwatches', emoji: '⌚' },
+  { id: 'gaming', name: 'Gaming Consoles', emoji: '🎮' },
+  { id: 'home', name: 'Smart Home', emoji: '🏠' },
 ];
 
 export default function HomeDashboard() {
@@ -23,126 +20,68 @@ export default function HomeDashboard() {
   };
 
   return (
-    <div className="h-screen w-full bg-[#0a0a0f] text-[#f1f5f9] overflow-hidden flex flex-col font-sans">
-      {/* 🔝 NAVBAR */}
-      <nav className="flex items-center justify-between px-6 py-4 border-b"
-           style={{
-             background: 'rgba(255,255,255,0.04)',
-             backdropFilter: 'blur(16px)',
-             borderColor: 'rgba(255,255,255,0.08)'
-           }}>
+    <div data-bg="#FFFFFF" className="min-h-screen bg-[#FFFFFF] flex flex-col font-sans">
+      {/* Navbar */}
+      <nav className="flex items-center justify-between px-6 py-4 bg-[#FAFAFA] border-b border-[rgba(29,28,28,0.08)] shadow-[0_4px_16px_rgba(29,28,28,0.04)] relative z-10">
         <div className="flex items-center gap-2">
-          <ShoppingBag className="text-white" size={24} />
-          <span className="text-xl font-bold tracking-tight">ShopSense</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-[var(--bg-pink)]">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+            <path d="M3 6h18" />
+            <path d="M16 10a4 4 0 0 1-8 0" />
+          </svg>
+          <span className="text-[var(--bg-pink)] text-2xl tracking-tight" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>SHOPSENSE</span>
         </div>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border border-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.1)] transition-colors"
+          className="btn-ghost"
         >
-          <LogOut size={16} />
-          <span>Logout</span>
+          Logout
         </button>
       </nav>
 
-      {/* 🎠 REVOLVING CATEGORY CARDS */}
-      <div className="relative w-full py-10 mt-6 overflow-hidden group">
-        <style>
-          {`
-            @keyframes marquee {
-              0% { transform: translateX(0); }
-              100% { transform: translateX(-50%); }
-            }
-            .marquee-track {
-              display: flex;
-              width: max-content;
-              animation: marquee 35s linear infinite;
-            }
-            @media (prefers-reduced-motion: reduce) {
-              .marquee-track {
-                animation: none;
-                flex-wrap: wrap;
-                justify-content: center;
-                width: 100%;
-              }
-            }
-            .group:hover .marquee-track {
-              animation-play-state: paused;
-            }
-          `}
-        </style>
-        
-        <div className="marquee-track px-4 gap-5">
-          {/* Render twice for seamless loop */}
-          {[...CATEGORIES, ...CATEGORIES].map((cat, idx) => (
-            <div
-              key={idx}
-              className="flex flex-col items-center justify-center shrink-0"
-              style={{
-                width: '180px',
-                height: '96px',
-                borderRadius: '16px',
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                backdropFilter: 'blur(8px)',
-                boxShadow: `0 8px 32px ${cat.color}`,
-              }}
-              tabIndex={-1}
-              aria-hidden="true"
-            >
-              <span className="text-4xl mb-1">{cat.icon}</span>
-              <span className="text-[0.95rem] font-medium text-[#f1f5f9] tracking-wide">{cat.label}</span>
+      {/* Category Marquee Strip */}
+      <div className="w-full bg-[var(--bg-yellow)] overflow-hidden" style={{ borderTop: '1px solid rgba(29,28,28,0.12)', borderBottom: '1px solid rgba(29,28,28,0.12)', padding: '18px 0' }}>
+        <div className="flex w-fit animate-[ticker_30s_linear_infinite] hover:[animation-play-state:paused]" style={{ whiteSpace: 'nowrap' }}>
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="flex items-center gap-[48px] px-[24px]">
+              {CATEGORIES.map((cat) => (
+                <div key={cat.id} className="flex items-center gap-2 text-[#1D1C1C] text-[1rem] font-semibold">
+                  <span className="text-xl">{cat.emoji}</span>
+                  <span>{cat.name}</span>
+                </div>
+              ))}
             </div>
           ))}
         </div>
       </div>
 
-      {/* 🌊 WAVY DECORATIVE DIVIDER */}
-      <div className="w-full relative -mt-4 z-10 opacity-60 pointer-events-none">
-        <svg viewBox="0 0 1440 120" className="w-full h-auto" preserveAspectRatio="none">
-          <path 
-            fill="rgba(124, 58, 237, 0.05)" 
-            d="M0,64L80,69.3C160,75,320,85,480,80C640,75,800,53,960,48C1120,43,1280,53,1360,58.7L1440,64L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z"
-          ></path>
-          <path 
-            fill="rgba(37, 99, 235, 0.05)" 
-            d="M0,96L80,85.3C160,75,320,53,480,53.3C640,53,800,75,960,80C1120,85,1280,75,1360,70.6L1440,67.2L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z"
-          ></path>
-        </svg>
-      </div>
-
-      {/* ▶️ START CHAT BUTTON (Centered below wave) */}
-      <div className="flex-1 flex flex-col items-center justify-center mt-2 px-4">
-        <style>
-          {`
-            @keyframes pulse-gentle {
-              0%, 100% { transform: scale(1); }
-              50% { transform: scale(1.02); }
-            }
-            .animate-pulse-gentle {
-              animation: pulse-gentle 2.5s ease-in-out infinite;
-            }
-            @media (prefers-reduced-motion: reduce) {
-              .animate-pulse-gentle {
-                animation: none;
-              }
-            }
-          `}
-        </style>
-        <button
-          onClick={() => navigate('/chat')}
-          className="animate-pulse-gentle group relative flex items-center justify-center px-12 py-4 rounded-full text-white font-semibold text-lg transition-all duration-300 hover:scale-105 active:scale-95"
-          style={{
-            background: 'linear-gradient(135deg, #7c3aed, #2563eb)',
-          }}
-        >
-          {/* Subtle glow that intensifies on hover */}
-          <div className="absolute inset-0 rounded-full bg-inherit blur-md opacity-40 group-hover:opacity-100 group-hover:blur-xl transition-all duration-300" style={{ zIndex: -1 }}></div>
-          ＋ Start Chat
-        </button>
-        <p className="mt-4 text-[#94a3b8] text-[0.9rem] text-center max-w-sm">
-          Tell ShopSense what you're looking for — in your own words.
-        </p>
-      </div>
+      {/* Main CTA Area */}
+      <main className="flex-1 flex flex-col items-center justify-center p-[60px_24px] bg-[#FFFFFF] min-h-[calc(100vh-140px)]">
+        <div className="max-w-4xl w-full mx-auto flex flex-col items-center animate-on-scroll visible">
+          <p className="text-[var(--text-muted)] text-[0.75rem] font-semibold tracking-[0.14em] uppercase mb-4">Start your search</p>
+          <h1 className="text-[#1D1C1C] text-center" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(3.5rem, 10vw, 9rem)", lineHeight: 0.92 }}>
+            WHAT ARE YOU <br/>
+            <span className="text-[var(--bg-pink)]">LOOKING</span> FOR?
+          </h1>
+          <p className="text-[var(--text-muted)] text-[1rem] mt-[16px] text-center max-w-lg">
+            ShopSense connects you with the perfect products using AI. Describe your needs, set your budget, and let's go.
+          </p>
+          
+          <button
+            onClick={() => navigate('/chat')}
+            className="btn-primary"
+            style={{ marginTop: '40px' }}
+          >
+            Start Chat
+          </button>
+        </div>
+      </main>
+      <style>{`
+        @keyframes ticker {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
     </div>
   );
 }

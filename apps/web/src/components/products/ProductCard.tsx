@@ -23,9 +23,9 @@ export default function ProductCard({
 
   return (
     <div
-      className="group relative flex flex-col bg-surface border border-border rounded-2xl
-                 overflow-hidden hover:border-accent/30 hover:-translate-y-0.5
-                 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300
+      className="group relative flex flex-col bg-[#FFFFFF] border border-[var(--chat-border)] rounded-[12px]
+                 overflow-hidden hover:-translate-y-1 text-[var(--chat-text)] shadow-[0_2px_8px_rgba(29,28,28,0.06)]
+                 hover:shadow-[0_8px_24px_rgba(29,28,28,0.10)] transition-all duration-300
                  cursor-pointer"
       style={{ animationDelay: `${index * 50}ms` }}
       onClick={() => onViewDetail(product)}
@@ -67,12 +67,12 @@ export default function ProductCard({
       {/* Content */}
       <div className="flex-1 flex flex-col p-4 gap-3">
         {/* Title */}
-        <h3 className="text-sm font-medium text-primary line-clamp-2 leading-snug">
+        <h3 className="text-sm font-medium text-[var(--chat-text)] line-clamp-2 leading-snug">
           {product.title}
         </h3>
 
         {/* Price */}
-        <p className="text-lg font-bold text-accent font-mono">
+        <p className="text-lg font-bold text-[#1D1C1C] font-mono">
           {formatINR(product.price_inr)}
         </p>
 
@@ -119,11 +119,11 @@ export default function ProductCard({
               e.stopPropagation();
               onCompareToggle(product.id);
             }}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full
                         text-xs font-medium transition-all duration-200
                         ${isInCompare
-                          ? 'bg-accent/20 text-accent border border-accent/30'
-                          : 'bg-surface border border-border text-muted hover:border-accent/30 hover:text-accent'
+                          ? 'bg-[var(--chat-elevated)] text-[var(--chat-text)] border border-[var(--chat-border)] hover:bg-[#D8D7D5]'
+                          : 'bg-transparent border border-[var(--chat-border)] text-[var(--chat-text-muted)] hover:bg-[var(--chat-card)] hover:text-[var(--chat-text)]'
                         }`}
           >
             <GitCompareArrows size={13} />
@@ -135,9 +135,9 @@ export default function ProductCard({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg
-                       text-xs font-medium bg-accent text-white hover:bg-accent/90
-                       transition-all duration-200 active:scale-95"
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full
+                       text-xs font-medium bg-[var(--chat-elevated)] text-[var(--chat-text)] border border-[var(--chat-border)]
+                       hover:bg-[#D8D7D5] transition-all duration-200 active:scale-95"
           >
             Buy <ExternalLink size={12} />
           </a>

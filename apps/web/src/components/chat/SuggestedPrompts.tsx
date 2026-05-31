@@ -1,8 +1,7 @@
 // ─── Suggested Prompts ───────────────────────────────────────────────────────
 
 import {
-  Laptop, Headphones, GitCompareArrows, Camera,
-  Smartphone, Tablet, Gamepad2, BatteryFull,
+  Laptop, Headphones, Smartphone, Gamepad2, BatteryFull,
 } from 'lucide-react';
 
 const SUGGESTED_PROMPTS = [
@@ -25,9 +24,9 @@ export default function SuggestedPrompts({ onSelect }: SuggestedPromptsProps) {
           <button
             key={prompt.text}
             onClick={() => onSelect(prompt.text)}
-            className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full
-                       bg-[rgba(124,58,237,0.2)] border border-[#7c3aed] hover:bg-[rgba(124,58,237,0.3)] 
-                       transition-all duration-200 text-xs text-white whitespace-nowrap"
+            className="flex-shrink-0 flex items-center gap-2 px-[18px] py-[8px] rounded-full
+                       bg-[#FFFFFF] border border-[var(--chat-border)] hover:bg-[var(--chat-card)] hover:border-[var(--border-strong)]
+                       transition-all duration-200 text-[0.82rem] text-[var(--chat-text)] shadow-[0_1px_4px_rgba(29,28,28,0.06)] whitespace-nowrap"
           >
             {prompt.text}
           </button>

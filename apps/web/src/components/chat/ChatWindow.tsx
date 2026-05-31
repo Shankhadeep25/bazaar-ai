@@ -6,7 +6,7 @@ import { useChat } from '../../hooks/useChat';
 import { useProducts } from '../../hooks/useProducts';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
-import SuggestedPrompts, { SUGGESTED_PROMPTS } from './SuggestedPrompts';
+import SuggestedPrompts from './SuggestedPrompts';
 import ProductGrid from '../products/ProductGrid';
 import ProductDetailModal from '../products/ProductDetailModal';
 import CompareDrawer from '../products/CompareDrawer';
@@ -21,33 +21,22 @@ import type { DisplayMessage } from '../../lib/types';
 function TypingIndicator() {
   return (
     <div className="flex gap-3">
-      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-purple-500
+      <div className="w-8 h-8 rounded-lg bg-[var(--bg-pink)]
                      flex items-center justify-center mt-1 shrink-0">
-        <span className="text-white text-xs font-bold font-display">S</span>
+        <span className="text-[var(--text-on-light)] text-xs font-bold font-display">S</span>
       </div>
-      <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-surface border border-border">
+      <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--bg-card)] border border-[var(--border-dark)]">
         <div className="flex gap-1.5 items-center h-5">
-          <span className="w-2 h-2 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: '0ms' }} />
-          <span className="w-2 h-2 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: '150ms' }} />
-          <span className="w-2 h-2 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: '300ms' }} />
+          <span className="w-2 h-2 rounded-full bg-[var(--bg-pink)] animate-bounce" style={{ animationDelay: '0ms' }} />
+          <span className="w-2 h-2 rounded-full bg-[var(--bg-pink)] animate-bounce" style={{ animationDelay: '150ms' }} />
+          <span className="w-2 h-2 rounded-full bg-[var(--bg-pink)] animate-bounce" style={{ animationDelay: '300ms' }} />
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Animated Placeholder ────────────────────────────────────────────────────
 
-function useAnimatedPlaceholder() {
-  const [index, setIndex] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % SUGGESTED_PROMPTS.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-  return SUGGESTED_PROMPTS[index].text;
-}
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
@@ -70,7 +59,6 @@ export default function ChatWindow() {
   const { compareData, isCompareOpen, runCompare, closeCompare } = useProducts();
   const [detailProduct, setDetailProduct] = useState<UnifiedProduct | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const animatedPlaceholder = useAnimatedPlaceholder();
 
   const hasMessages = messages.length > 0;
 
@@ -147,7 +135,7 @@ export default function ChatWindow() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-[#FFFFFF] text-[var(--text-primary)]">
       {/* Sidebar */}
       <Sidebar
         sessions={savedSessions}
@@ -163,34 +151,21 @@ export default function ChatWindow() {
       />
 
       {/* Main Panel */}
-      <main className="flex-1 flex flex-col min-w-0 relative">
-        {/* Top Bar */}
-        <header className="flex items-center gap-3 px-4 py-3 border-b border-border bg-surface/50 backdrop-blur-sm">
-          <button
-            onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
-            className="p-2 rounded-lg text-muted hover:text-primary hover:bg-background
-                       transition-colors lg:hidden"
-          >
-            <Menu size={18} />
-          </button>
-
-          <div className="hidden lg:flex items-center gap-2">
-            <button
-              onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
-              className="p-2 rounded-lg text-muted hover:text-primary hover:bg-background transition-colors"
-            >
-              <Menu size={18} />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-purple-500
-                           flex items-center justify-center lg:hidden">
-              <span className="text-white text-xs font-bold font-display">S</span>
-            </div>
-            <h1 className="text-sm font-semibold text-primary font-display">ShopSense</h1>
-          </div>
-
+      <main className="flex-1 flex flex-col min-w-0 bg-[var(--chat-bg)] chat-page">
+      {/* Mobile Header & Header */}
+      <header className="flex items-center gap-3 p-4 bg-[#FAFAFA] border-b border-[rgba(29,28,28,0.08)] shadow-[0_4px_16px_rgba(29,28,28,0.04)] lg:hidden">
+        <button
+          onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
+          className="p-2 -ml-2 rounded-lg text-[var(--chat-text)] hover:bg-[var(--chat-elevated)] transition-colors"
+        >
+          <Menu size={20} />
+        </button>
+        <span className="font-semibold text-[var(--chat-text)]">ShopSense</span>
+      </header>
+      
+      {/* Desktop Header */}
+      <header className="hidden lg:flex items-center justify-between p-4 bg-[#FAFAFA] border-b border-[rgba(29,28,28,0.08)] shadow-[0_4px_16px_rgba(29,28,28,0.04)]">
+        <span className="font-semibold text-[var(--chat-text)]">Current Session</span>
           <div className="ml-auto">
             {sessionId && (
               <span className="text-[10px] text-muted/40 font-mono hidden sm:block">
@@ -198,22 +173,22 @@ export default function ChatWindow() {
               </span>
             )}
           </div>
-        </header>
+      </header>
 
         {/* Chat Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {!hasMessages ? (
             /* ─── Empty / Landing State ───── */
             <div className="flex-1 flex flex-col items-center justify-center px-4 pb-20">
-              <div className="mb-8 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl
-                               bg-gradient-to-br from-accent to-purple-500 mb-4 shadow-lg shadow-accent/20">
-                  <Sparkles className="text-white" size={28} />
+              <div className="mb-8 text-center flex flex-col items-center">
+                <div className="inline-flex items-center justify-center w-[68px] h-[68px] rounded-[18px]
+                               bg-[var(--chat-elevated)] mb-4">
+                  <Sparkles className="text-[var(--chat-text)]" size={28} />
                 </div>
-                <h2 className="text-2xl font-bold text-primary font-display mb-2">
+                <h2 className="text-[var(--chat-text)] mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(1.8rem, 4vw, 2.8rem)" }}>
                   Ask anything. Find everything.
                 </h2>
-                <p className="text-sm text-muted max-w-md">
+                <p className="text-sm text-[var(--chat-text-muted)] max-w-md">
                   Your AI shopping assistant for the Indian market. Describe what you need
                   and get personalized product recommendations instantly.
                 </p>
@@ -261,7 +236,7 @@ export default function ChatWindow() {
           )}
 
           {/* Chat Input Container */}
-          <div className="sticky bottom-0 w-full z-10 pt-2 bg-[rgba(10,10,15,0.8)] backdrop-blur-md border-t border-[rgba(255,255,255,0.05)]">
+          <div className="sticky bottom-0 w-full z-10 pt-2 bg-[#FFFFFF] border-t border-[var(--chat-border)] shadow-[0_-2px_12px_rgba(29,28,28,0.04)]">
             <SuggestedPrompts onSelect={handleSend} />
             <div className="px-2 pb-2 pt-1 max-w-3xl mx-auto">
               <ChatInput

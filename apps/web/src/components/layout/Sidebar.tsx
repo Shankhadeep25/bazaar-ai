@@ -36,22 +36,22 @@ export default function Sidebar({
       {/* Sidebar */}
       <aside
         className={`fixed lg:static inset-y-0 left-0 z-40 w-72 flex flex-col
-                    bg-surface border-r border-border transition-transform duration-300
+                    bg-[var(--chat-card)] border-r border-[var(--chat-border)] transition-transform duration-300
                     ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4 border-b border-[var(--chat-border)]">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-purple-500
+            <div className="w-8 h-8 rounded-full bg-[var(--chat-elevated)]
                            flex items-center justify-center">
-              <span className="text-white text-sm font-bold font-display">S</span>
+              <span className="text-[var(--chat-text)] text-sm font-bold font-display">S</span>
             </div>
-            <span className="font-semibold text-primary font-display text-sm">ShopSense</span>
+            <span className="font-semibold text-[var(--chat-text)] font-display text-sm">ShopSense</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-muted hover:text-primary
-                       hover:bg-background transition-colors lg:hidden"
+            className="p-1.5 rounded-lg text-[var(--chat-text-muted)] hover:text-[var(--chat-text)]
+                       transition-colors lg:hidden"
           >
             <X size={16} />
           </button>
@@ -64,9 +64,9 @@ export default function Sidebar({
               onNewChat();
               onClose();
             }}
-            className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl
-                       border border-dashed border-border text-sm text-muted
-                       hover:border-accent/50 hover:text-accent hover:bg-accent/5
+            className="w-full flex items-center gap-2 px-4 py-2.5 rounded-[10px]
+                       border border-[var(--chat-border)] bg-[#FFFFFF] shadow-[0_1px_4px_rgba(29,28,28,0.06)]
+                       text-sm text-[var(--chat-text)] hover:bg-[var(--chat-elevated)] hover:border-[var(--border-strong)]
                        transition-all duration-200"
           >
             <Plus size={16} />
@@ -75,19 +75,19 @@ export default function Sidebar({
         </div>
 
         {/* Sessions List */}
-        <div className="flex-1 overflow-y-auto px-3 pb-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
+        <div className="flex-1 overflow-y-auto px-3 pb-3 scrollbar-chat">
           {sessions.length === 0 ? (
-            <p className="text-xs text-muted/50 text-center py-8">No conversations yet</p>
+            <p className="text-xs text-[var(--chat-text-muted)] text-center py-8">No conversations yet</p>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-1 mt-3">
               {sessions.map((session) => (
                 <div
                   key={session.sessionId}
                   className={`group flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer
                               transition-all duration-200
                               ${activeSessionId === session.sessionId
-                                ? 'bg-accent/10 border border-accent/20 text-accent'
-                                : 'hover:bg-background text-muted hover:text-primary border border-transparent'
+                                ? 'bg-[#FFFFFF] text-[var(--chat-text)] border-l-[2px] border-[#1D1C1C] shadow-[0_1px_4px_rgba(29,28,28,0.06)]'
+                                : 'bg-transparent text-[var(--chat-text-muted)] hover:bg-[var(--chat-surface)] hover:text-[var(--chat-text)] border-l-[2px] border-transparent'
                               }`}
                   onClick={() => onSelectSession(session.sessionId)}
                 >
@@ -96,7 +96,7 @@ export default function Sidebar({
                     <p className="text-xs font-medium truncate">
                       {truncate(session.title, 40)}
                     </p>
-                    <p className="text-[10px] opacity-50 mt-0.5">
+                    <p className="text-[10px] opacity-50 mt-0.5 text-[var(--chat-text-muted)]">
                       {formatRelativeTime(session.lastActiveAt)}
                     </p>
                   </div>
@@ -106,7 +106,7 @@ export default function Sidebar({
                       onDeleteSession(session.sessionId);
                     }}
                     className="shrink-0 p-1 rounded opacity-0 group-hover:opacity-100
-                               text-muted hover:text-coral transition-all"
+                               text-[var(--chat-text-muted)] hover:text-[var(--bg-pink)] transition-all"
                   >
                     <Trash2 size={12} />
                   </button>
@@ -117,8 +117,8 @@ export default function Sidebar({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border">
-          <p className="text-[10px] text-muted/40 text-center">
+        <div className="p-4 border-t border-[var(--chat-border)]">
+          <p className="text-[0.72rem] text-[var(--chat-text-muted)] text-center">
             Powered by RAG + Gemini + Groq
           </p>
         </div>

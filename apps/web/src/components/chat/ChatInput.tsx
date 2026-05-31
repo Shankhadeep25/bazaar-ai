@@ -43,7 +43,7 @@ export default function ChatInput({ onSend, onStop, isStreaming, placeholder }: 
   };
 
   return (
-    <div className="relative flex items-end gap-2 p-3 bg-[rgba(255,255,255,0.05)] backdrop-blur-[12px] rounded-xl">
+    <div className="relative flex items-end gap-2 p-3 bg-transparent rounded-xl">
       <div className="flex-1 relative">
         <textarea
           ref={textareaRef}
@@ -54,11 +54,11 @@ export default function ChatInput({ onSend, onStop, isStreaming, placeholder }: 
           rows={1}
           autoFocus
           disabled={isStreaming}
-          className="w-full resize-none rounded-lg bg-transparent
-                     px-4 py-2 pr-12 text-sm text-primary placeholder:text-muted/50
-                     focus:outline-none focus:ring-2 focus:ring-accent/40
+          className="w-full resize-none rounded-[12px] bg-[var(--chat-card)] border border-[var(--chat-border)]
+                     px-4 py-3 pr-12 text-sm text-[var(--chat-text)] placeholder:text-[var(--chat-text-muted)]
+                     focus:outline-none focus:border-[rgba(29,28,28,0.30)] focus:ring-0
                      disabled:opacity-50 transition-all duration-200
-                     scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border"
+                     scrollbar-chat"
           style={{ maxHeight: '120px' }}
         />
         <span className="absolute right-3 bottom-3 text-[10px] text-muted/40 pointer-events-none">
@@ -69,8 +69,8 @@ export default function ChatInput({ onSend, onStop, isStreaming, placeholder }: 
       {isStreaming ? (
         <button
           onClick={onStop}
-          className="shrink-0 p-3 rounded-xl bg-coral/20 text-coral
-                     hover:bg-coral/30 transition-colors duration-200
+          className="shrink-0 p-3 rounded-[10px] bg-[var(--chat-elevated)] border border-[var(--chat-border)] text-[var(--chat-text)]
+                     hover:bg-[#D8D7D5] transition-colors duration-200
                      animate-pulse"
           aria-label="Stop generating"
         >
@@ -80,10 +80,10 @@ export default function ChatInput({ onSend, onStop, isStreaming, placeholder }: 
         <button
           onClick={handleSend}
           disabled={!input.trim()}
-          className="shrink-0 p-3 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#2563eb] text-white
-                     opacity-90 hover:opacity-100 transition-all duration-200
-                     disabled:opacity-30 disabled:cursor-not-allowed
-                     active:scale-95"
+          className="shrink-0 p-3 rounded-[10px] bg-[var(--chat-elevated)] border border-[var(--chat-border)] text-[var(--chat-text)]
+                     hover:bg-[#D8D7D5] transition-colors duration-200
+                     flex items-center justify-center
+                     disabled:opacity-30 disabled:cursor-not-allowed"
           aria-label="Send message"
         >
           <Send size={18} />

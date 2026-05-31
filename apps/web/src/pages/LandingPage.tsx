@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Footer from '../components/layout/Footer';
 
 const features = [
   {
@@ -156,7 +157,7 @@ export default function LandingPage() {
         </div>
       </section>
       
-      {/* TODO: Footer */}
+      <Footer />
 
       <style>{`
         @keyframes ticker {

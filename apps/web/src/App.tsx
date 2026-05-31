@@ -9,6 +9,7 @@ import ChatWindow from './components/chat/ChatWindow';
 import LoginPage from './components/auth/LoginPage';
 import LandingPage from './pages/LandingPage';
 import HomeDashboard from './pages/HomeDashboard';
+import { AboutUsPage, ContactUsPage, FAQPage, PrivacyPolicyPage, TermsConditionsPage, SitemapPage } from './pages/legal/LegalPages';
 
 // ─── Shared Toaster Options ───────────────────────────────────────────────────
 
@@ -128,10 +129,15 @@ export default function App() {
           />
 
           {/* Root: LandingPage (public) or redirect to /home */}
-          <Route
-            path="/"
-            element={<IndexRoute />}
-          />
+          <Route path="/" element={<IndexRoute />} />
+
+          {/* Static Pages */}
+          <Route path="/about" element={<AboutUsPage />} />
+          <Route path="/contact" element={<ContactUsPage />} />
+          <Route path="/faq" element={<FAQPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsConditionsPage />} />
+          <Route path="/sitemap" element={<SitemapPage />} />
 
           {/* Protected Routes */}
           <Route

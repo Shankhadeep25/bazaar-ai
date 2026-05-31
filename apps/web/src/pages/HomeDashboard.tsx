@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { signOut } from '../lib/authClient';
+import Footer from '../components/layout/Footer';
 
 const CATEGORIES = [
   { id: 'smartphones', name: 'Smartphones', emoji: '📱' },
@@ -76,6 +77,7 @@ export default function HomeDashboard() {
           </button>
         </div>
       </main>
+      <Footer />
       <style>{`
         @keyframes ticker {
           0% { transform: translateX(0); }

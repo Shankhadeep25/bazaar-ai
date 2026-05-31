@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ChatProvider } from './context/ChatContext';
 import ChatWindow from './components/chat/ChatWindow';
 import LoginPage from './components/auth/LoginPage';
+import LandingPage from './pages/LandingPage';
 
 // ─── Shared Toaster Options ───────────────────────────────────────────────────
 
@@ -19,11 +20,21 @@ const toasterOptions = {
   },
 } as const;
 
-// ─── Protected Route ──────────────────────────────────────────────────────────
-// Renders children only when authenticated; shows a loading state while
-// the session is being fetched; redirects to /login otherwise.
+// ─── Public Route ─────────────────────────────────────────────────────────────
+// Redirects already-authenticated users away from /login to /.
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) return null; // Don't flash login page while checking session
+
+  return isAuthenticated ? <Navigate to="/" replace /> : <>{children}</>;
+}
+
+// ─── Index Route ──────────────────────────────────────────────────────────────
+// Renders ChatWindow for authenticated users and LandingPage for unauthenticated users
+
+function IndexRoute() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -51,18 +62,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
-}
-
-// ─── Public Route ─────────────────────────────────────────────────────────────
-// Redirects already-authenticated users away from /login to /.
-
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) return null; // Don't flash login page while checking session
-
-  return isAuthenticated ? <Navigate to="/" replace /> : <>{children}</>;
+  return isAuthenticated ? (
+    <ChatProvider>
+      <ChatWindow />
+    </ChatProvider>
+  ) : (
+    <LandingPage />
+  );
 }
 
 // ─── Root App ─────────────────────────────────────────────────────────────────
@@ -82,17 +88,19 @@ export default function App() {
               </PublicRoute>
             }
           />
+          <Route
+            path="/signup"
+            element={
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
+            }
+          />
 
-          {/* Protected: main chat app */}
+          {/* Root: LandingPage (public) or ChatWindow (protected) */}
           <Route
             path="/"
-            element={
-              <ProtectedRoute>
-                <ChatProvider>
-                  <ChatWindow />
-                </ChatProvider>
-              </ProtectedRoute>
-            }
+            element={<IndexRoute />}
           />
 
           {/* Catch-all → home */}

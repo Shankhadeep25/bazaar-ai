@@ -22,7 +22,8 @@
 
 - **Semantic Search** — Powered by `text-embedding-004` and Qdrant vector store.
 - **RAG Chat Layer** — Ask follow-up questions, compare specs, or clarify requirements via a streaming SSE LLM chat powered by Gemini.
-- **Dynamic Frontend** — A stunning glassmorphic UI built with React + Vite and modern vanilla CSS.
+- **Dynamic Frontend** — A stunning "Bright & Light" vibrant UI built with React + Vite, featuring dynamic micro-interactions (magnetic cursors, text scrambling, scroll reveals).
+- **Reliable RAG Logic** — Fine-tuned system prompts ensuring accurate budget math and confident product recommendations without hallucinations.
 - **Robust Auth** — Powered by [Better Auth](https://better-auth.com/) (Email/Password + Google OAuth) with secure HttpOnly cookies.
 - **Monorepo Architecture** — Scalable workspaces separating core logic, database access, caching, and frontend/backend apps.
 
@@ -66,11 +67,12 @@ shopsense/
 │   │
 │   └── web/                    # Frontend React SPA
 │       ├── src/
-│       │   ├── components/     # UI Components (Chat, Products, Auth)
+│       │   ├── components/     # UI Components (Chat, Products, Auth, Layout/Footer)
 │       │   ├── context/        # React Context (AuthContext, ChatContext)
-│       │   ├── lib/            # API & SSE clients, Formatters, Types
+│       │   ├── lib/            # API & SSE clients, Formatters, Interactions logic
+│       │   ├── pages/          # Main Pages (Landing, Dashboard, and Legal Static Pages)
 │       │   ├── App.tsx         # Routing & Layout
-│       │   └── index.css       # Design System & Styling
+│       │   └── index.css       # Design Tokens & Styling
 │       └── package.json
 │
 ├── packages/

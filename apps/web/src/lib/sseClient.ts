@@ -1,7 +1,7 @@
 // ─── SSE Client ──────────────────────────────────────────────────────────────
 // Uses fetch + ReadableStream to handle POST-based SSE (EventSource only supports GET)
 
-import type { SSEEvent, UnifiedProduct } from './types';
+import type { SSEEvent, UnifiedProduct, SSEProductsEvent } from './types';
 
 export interface SSECallbacks {
   onSession: (sessionId: string) => void;
@@ -60,7 +60,7 @@ export async function streamChat(
               callbacks.onToken(payload.content);
               break;
             case 'products':
-              callbacks.onProducts(payload.content);
+              callbacks.onProducts((payload as SSEProductsEvent).content);
               break;
             case 'done':
               callbacks.onDone(payload.intent);

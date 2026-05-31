@@ -2,22 +2,24 @@
 // Production: runs in cluster mode (1 worker per CPU core).
 // Development: runs single-process for easier debugging.
 
+// LOAD ENV VARS FIRST
+import './env';
+
 import cluster from 'node:cluster';
 import os from 'node:os';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+
 import { connectDB, disconnectDB } from '@shopsense/db';
 import { connectRedis, disconnectRedis } from '@shopsense/cache';
 import { initRAG } from '@shopsense/rag-core';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { chatRateLimit, generalRateLimit } from './middleware/apiRateLimiter';
+import { requireAuth } from './middleware/requireAuth';
+import authRoutes from './routes/auth';
 import chatRoutes from './routes/chat';
 import productRoutes from './routes/products';
 import sessionRoutes from './routes/sessions';
-
-// Load env vars
-dotenv.config({ path: '../../.env' });
 
 const PORT = process.env.PORT || 3001;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
@@ -65,7 +67,10 @@ async function startServer(): Promise<void> {
   const app = express();
 
   // ─── Middleware ──────────────────────────────────────────────────────────
-  app.use(cors());
+  app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,   // Required for cookie-based Better Auth sessions
+  }));
   app.use(express.json());
 
   // ─── Health Check ───────────────────────────────────────────────────────
@@ -79,10 +84,13 @@ async function startServer(): Promise<void> {
     });
   });
 
-  // ─── Routes (with rate limiting) ────────────────────────────────────────
-  app.use('/api/chat', chatRateLimit, chatRoutes);
-  app.use('/api/products', generalRateLimit, productRoutes);
-  app.use('/api/sessions', generalRateLimit, sessionRoutes);
+  // ─── Auth Routes (no rate limiting — Better Auth has built-in protection) ─
+  app.use('/api/auth', authRoutes);
+
+  // ─── Protected Routes (requireAuth guards all of these) ─────────────────
+  app.use('/api/chat', requireAuth, chatRateLimit, chatRoutes);
+  app.use('/api/products', requireAuth, generalRateLimit, productRoutes);
+  app.use('/api/sessions', requireAuth, generalRateLimit, sessionRoutes);
 
   // ─── Error Handling ─────────────────────────────────────────────────────
   app.use(notFoundHandler);

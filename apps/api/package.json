@@ -11,9 +11,11 @@
     "@shopsense/cache": "*",
     "@shopsense/db": "*",
     "@shopsense/rag-core": "*",
+    "better-auth": "^1.6.12",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "mongodb": "^7.2.0",
     "uuid": "^14.0.0"
   },
   "devDependencies": {

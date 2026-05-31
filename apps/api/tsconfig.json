@@ -3,6 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
+    "module": "CommonJS",
+    "moduleResolution": "Bundler",
     "types": ["node"],
     "paths": {
       "@shopsense/rag-core": ["../../packages/rag-core/src/index.ts"],

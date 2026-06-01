@@ -88,6 +88,7 @@ export interface SessionWithHistory {
     timestamp: string;
     intent: string;
     retrievedChunkIds: string[];
+    products?: UnifiedProduct[];
   }>;
 }
 

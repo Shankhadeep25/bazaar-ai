@@ -30,17 +30,6 @@ export default function ProductGrid({
           <span className="ml-2 text-xs text-muted font-normal">({products.length})</span>
         </h3>
 
-        {compareList.length >= 2 && (
-          <button
-            onClick={onCompareSelected}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium
-                       bg-accent text-white hover:bg-accent/90 transition-all duration-200
-                       animate-fade-in active:scale-95"
-          >
-            <GitCompareArrows size={14} />
-            Compare ({compareList.length})
-          </button>
-        )}
       </div>
 
       {/* Grid */}

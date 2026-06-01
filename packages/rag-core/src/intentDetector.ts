@@ -72,7 +72,7 @@ let llm: ChatGoogleGenerativeAI | null = null;
 function getLLM(): ChatGoogleGenerativeAI {
   if (!llm) {
     llm = new ChatGoogleGenerativeAI({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       apiKey: process.env.GOOGLE_API_KEY,
       temperature: 0,
       maxOutputTokens: 20,
@@ -101,7 +101,12 @@ export async function detectIntent(
           {
             role: 'system',
             content:
-              'Classify this user message as exactly one of: new_search, follow_up, comparison, clarification. Reply with ONLY the classification word.',
+              'Classify this user message as exactly one of: new_search, follow_up, comparison, clarification.\n' +
+              '- new_search: The user is asking for a completely new product, brand, or category (e.g., "gaming chairs", "laptops"). Even if it is just a noun phrase like "gaming chairs", classify as new_search.\n' +
+              '- follow_up: The user is asking for more details, specs, or asking a question about products already being discussed in the conversation.\n' +
+              '- comparison: The user is explicitly asking to compare two or more products.\n' +
+              '- clarification: The user is confused or asking to explain something.\n' +
+              'Reply with ONLY the classification word.',
           },
           {
             role: 'user',

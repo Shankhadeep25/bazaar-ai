@@ -37,6 +37,7 @@ export function useChat() {
             content: turn.content,
             timestamp: new Date(turn.timestamp),
             intent: (turn.intent || undefined) as DisplayMessage['intent'],
+            products: turn.products,
           }));
           ctx.dispatch({ type: 'RESTORE_MESSAGES', payload: restoredMessages });
         }

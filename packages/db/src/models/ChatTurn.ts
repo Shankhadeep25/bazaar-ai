@@ -7,6 +7,7 @@ export interface IChatTurn extends Document {
   timestamp: Date;
   intent: string;
   retrievedChunkIds: string[];
+  products?: any[];
 }
 
 const ChatTurnSchema = new Schema<IChatTurn>({
@@ -16,6 +17,7 @@ const ChatTurnSchema = new Schema<IChatTurn>({
   timestamp: { type: Date, default: Date.now },
   intent: { type: String, default: '' },
   retrievedChunkIds: { type: [String], default: [] },
+  products: { type: [Schema.Types.Mixed], default: undefined },
 });
 
 // Compound index for efficient session history queries

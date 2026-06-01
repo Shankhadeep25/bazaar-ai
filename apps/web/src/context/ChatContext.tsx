@@ -196,9 +196,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       streamedContentRef.current = '';
       streamedProductsRef.current = undefined;
 
-      // Build history from last 6 turns
-      const allMessages = [...state.messages, userMessage];
-      const history = allMessages
+      // Build history from last 6 turns (excluding the current user message)
+      const history = state.messages
         .filter((m) => m.role === 'user' || m.role === 'assistant')
         .slice(-6)
         .map((m) => ({

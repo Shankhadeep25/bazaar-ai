@@ -21,6 +21,7 @@ async function persistTurns(
       content: result.message,
       intent: result.intent,
       retrievedChunkIds: result.retrievedChunkIds,
+      products: result.products,
     });
 
     if (result.products) {

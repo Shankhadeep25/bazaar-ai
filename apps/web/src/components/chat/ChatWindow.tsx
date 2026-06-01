@@ -1,7 +1,7 @@
 // ─── Chat Window ─────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState } from 'react';
-import { Sparkles, Menu } from 'lucide-react';
+import { Sparkles, Menu, GitCompareArrows, X } from 'lucide-react';
 import { useChat } from '../../hooks/useChat';
 import { useProducts } from '../../hooks/useProducts';
 import MessageBubble from './MessageBubble';
@@ -67,9 +67,8 @@ export default function ChatWindow() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingContent]);
 
-  // Find the last message with products for the grid
-  const lastProductMessage = [...messages].reverse().find((m) => m.products && m.products.length > 0);
-  const displayProducts = lastProductMessage?.products ?? (products.length > 0 ? products : []);
+  // We no longer need a global displayProducts as products are rendered per-message
+  // but we still use the state `products` for streaming state
 
   const handleSend = (message: string) => {
     sendMessage(message);
@@ -105,6 +104,7 @@ export default function ChatWindow() {
           content: turn.content,
           timestamp: new Date(turn.timestamp),
           intent: (turn.intent || undefined) as DisplayMessage['intent'],
+          products: turn.products,
         }));
         dispatch({ type: 'RESTORE_MESSAGES', payload: restoredMessages });
       }
@@ -176,7 +176,29 @@ export default function ChatWindow() {
       </header>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+          {compareList.length >= 2 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 animate-fade-in flex items-center gap-2">
+              <button
+                onClick={() => runCompare(compareList)}
+                className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold
+                           bg-[var(--bg-pink)] text-white shadow-[0_8px_30px_rgba(255,107,107,0.4)]
+                           hover:shadow-[0_8px_30px_rgba(255,107,107,0.6)]
+                           hover:-translate-y-1 transition-all duration-300"
+              >
+                <GitCompareArrows size={18} />
+                Compare {compareList.length} Items
+              </button>
+              <button
+                onClick={() => dispatch({ type: 'CLEAR_COMPARE' })}
+                className="p-3 rounded-full bg-white text-[var(--chat-text-muted)] border border-[var(--chat-border)]
+                           shadow-md hover:bg-[var(--chat-elevated)] hover:text-[var(--chat-text)] transition-colors"
+                title="Clear comparison"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          )}
           {!hasMessages ? (
             /* ─── Empty / Landing State ───── */
             <div className="flex-1 flex flex-col items-center justify-center px-4 pb-20">
@@ -199,21 +221,43 @@ export default function ChatWindow() {
             <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
               <div className="max-w-3xl mx-auto px-4 py-6 space-y-6 pb-[120px]">
                 {messages.map((msg) => (
-                  <MessageBubble key={msg.id} message={msg} />
+                  <div key={msg.id} className="space-y-4">
+                    <MessageBubble message={msg} />
+                    {msg.products && msg.products.length > 0 && (
+                      <ProductGrid
+                        products={msg.products}
+                        compareList={compareList}
+                        onCompareToggle={(id) => dispatch({ type: 'TOGGLE_COMPARE', payload: id })}
+                        onViewDetail={setDetailProduct}
+                        onCompareSelected={() => runCompare(compareList)}
+                      />
+                    )}
+                  </div>
                 ))}
 
                 {/* Streaming message (not yet finalized) */}
                 {isStreaming && streamingContent && (
-                  <MessageBubble
-                    message={{
-                      id: 'streaming',
-                      role: 'assistant',
-                      content: '',
-                      timestamp: new Date(),
-                    }}
-                    isStreaming
-                    streamingContent={streamingContent}
-                  />
+                  <div className="space-y-4">
+                    <MessageBubble
+                      message={{
+                        id: 'streaming',
+                        role: 'assistant',
+                        content: '',
+                        timestamp: new Date(),
+                      }}
+                      isStreaming
+                      streamingContent={streamingContent}
+                    />
+                    {products.length > 0 && (
+                      <ProductGrid
+                        products={products}
+                        compareList={compareList}
+                        onCompareToggle={(id) => dispatch({ type: 'TOGGLE_COMPARE', payload: id })}
+                        onViewDetail={setDetailProduct}
+                        onCompareSelected={() => runCompare(compareList)}
+                      />
+                    )}
+                  </div>
                 )}
 
                 {/* Typing indicator (waiting for first token) */}
@@ -221,17 +265,6 @@ export default function ChatWindow() {
 
                 <div ref={chatEndRef} />
               </div>
-
-              {/* Product grid (only if we have products to show) */}
-              {displayProducts.length > 0 && (
-                <ProductGrid
-                  products={displayProducts}
-                  compareList={compareList}
-                  onCompareToggle={(id) => dispatch({ type: 'TOGGLE_COMPARE', payload: id })}
-                  onViewDetail={setDetailProduct}
-                  onCompareSelected={() => runCompare(compareList)}
-                />
-              )}
             </div>
           )}
 

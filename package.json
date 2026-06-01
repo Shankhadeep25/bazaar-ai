@@ -2,17 +2,19 @@
   "name": "shopsense",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "npm@11.3.0",
   "description": "NLP Shopping RAG Assistant for the Indian e-commerce market",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "dev:api": "npm run dev --workspace=apps/api",
-    "dev:web": "npm run dev --workspace=apps/web",
-    "build": "npm run build --workspaces --if-present",
-    "lint": "tsc --noEmit --workspaces",
-    "test": "npm run test --workspaces --if-present"
+    "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter=@shopsense/api",
+    "dev:web": "turbo run dev --filter=web",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -20,6 +22,7 @@
   "devDependencies": {
     "@types/node": "^25.7.0",
     "tsx": "^4.21.0",
+    "turbo": "^2.9.16",
     "typescript": "^6.0.3"
   }
 }

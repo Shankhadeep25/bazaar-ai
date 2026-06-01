@@ -229,7 +229,6 @@ export default function ChatWindow() {
                         compareList={compareList}
                         onCompareToggle={(id) => dispatch({ type: 'TOGGLE_COMPARE', payload: id })}
                         onViewDetail={setDetailProduct}
-                        onCompareSelected={() => runCompare(compareList)}
                       />
                     )}
                   </div>
@@ -254,7 +253,6 @@ export default function ChatWindow() {
                         compareList={compareList}
                         onCompareToggle={(id) => dispatch({ type: 'TOGGLE_COMPARE', payload: id })}
                         onViewDetail={setDetailProduct}
-                        onCompareSelected={() => runCompare(compareList)}
                       />
                     )}
                   </div>

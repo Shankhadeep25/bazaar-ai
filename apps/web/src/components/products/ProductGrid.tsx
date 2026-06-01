@@ -1,6 +1,5 @@
 // ─── Product Grid ────────────────────────────────────────────────────────────
 
-import { GitCompareArrows } from 'lucide-react';
 import type { UnifiedProduct } from '../../lib/types';
 import ProductCard from './ProductCard';
 
@@ -9,7 +8,6 @@ interface ProductGridProps {
   compareList: string[];
   onCompareToggle: (id: string) => void;
   onViewDetail: (product: UnifiedProduct) => void;
-  onCompareSelected: () => void;
 }
 
 export default function ProductGrid({
@@ -17,7 +15,6 @@ export default function ProductGrid({
   compareList,
   onCompareToggle,
   onViewDetail,
-  onCompareSelected,
 }: ProductGridProps) {
   if (products.length === 0) return null;
 

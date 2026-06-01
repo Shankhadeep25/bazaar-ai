@@ -39,7 +39,7 @@ export default function CompareDrawer({ data, isOpen, onClose, onAskCompare }: C
       className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-fade-in"
       onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
     >
-      <div className="w-full max-w-3xl h-full bg-surface border-l border-border
+      <div className="w-full max-w-3xl h-full bg-[#FFFFFF] border-l border-border
                       shadow-2xl shadow-black/50 animate-slide-in-right flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
@@ -59,7 +59,7 @@ export default function CompareDrawer({ data, isOpen, onClose, onAskCompare }: C
           <table className="w-full border-collapse min-w-[500px]">
             {/* Product header */}
             <thead>
-              <tr className="sticky top-0 bg-surface z-10 border-b border-border">
+              <tr className="sticky top-0 bg-[#FFFFFF] z-10 border-b border-border">
                 <th className="p-4 text-left text-xs font-medium text-muted w-1/5">
                   Specification
                 </th>

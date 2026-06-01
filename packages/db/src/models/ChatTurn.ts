@@ -21,4 +21,4 @@ const ChatTurnSchema = new Schema<IChatTurn>({
 // Compound index for efficient session history queries
 ChatTurnSchema.index({ sessionId: 1, timestamp: 1 });
 
-export const ChatTurn = mongoose.models.ChatTurn || mongoose.model<IChatTurn>('ChatTurn', ChatTurnSchema);
+export const ChatTurn = mongoose.model<IChatTurn>('ChatTurn', ChatTurnSchema);

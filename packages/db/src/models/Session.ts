@@ -20,4 +20,4 @@ const SessionSchema = new Schema<ISession>({
   productIds: { type: [String], default: [] },
 });
 
-export const Session = mongoose.models.Session || mongoose.model<ISession>('Session', SessionSchema);
+export const Session = mongoose.model<ISession>('Session', SessionSchema);

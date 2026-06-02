@@ -17,6 +17,7 @@ COPY --from=builder /app/out/package-lock.json ./package-lock.json
 RUN npm ci
 
 COPY --from=builder /app/out/full/ .
+COPY tsconfig.json tsconfig.json
 RUN npx turbo run build --filter=@shopsense/api...
 
 FROM node:20-alpine AS runner

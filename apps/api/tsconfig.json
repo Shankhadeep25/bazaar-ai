@@ -4,6 +4,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "module": "CommonJS",
+    "moduleResolution": "Node",
+    "ignoreDeprecations": "6.0",
     "types": ["node"],
     "paths": {
       "@shopsense/rag-core": ["../../packages/rag-core/src/index.ts"],

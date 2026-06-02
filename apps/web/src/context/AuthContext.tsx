@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 // ─── Auth Context ─────────────────────────────────────────────────────────────
 // Wraps Better Auth's useSession() and exposes a clean API to the whole app.
 

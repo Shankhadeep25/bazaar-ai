@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function initInteractions() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 

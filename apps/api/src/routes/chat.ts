@@ -90,7 +90,7 @@ router.post('/', async (req: Request, res: Response) => {
           },
           abortController.signal
         )
-      );
+      ) as { message: string; intent: string; retrievedChunkIds: string[]; products?: UnifiedProduct[] };
 
       if (!clientDisconnected) {
         if (result.products) {
@@ -107,7 +107,7 @@ router.post('/', async (req: Request, res: Response) => {
       // ── Concurrency-guarded pipeline execution ─────────────────────────
       const result = await pipelineGuard.run(() =>
         processChat({ sessionId, message, history }, abortController.signal)
-      );
+      ) as { message: string; intent: string; retrievedChunkIds: string[]; products?: UnifiedProduct[] };
 
       // ✅ Fix: persist turns safely — never crashes the process
       await persistTurns(sessionId, message, result);

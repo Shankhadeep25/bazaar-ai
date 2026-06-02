@@ -5,6 +5,7 @@ node_modules/
 dist/
 dist-ssr/
 .turbo/
+*.tsbuildinfo
 
 # Environment
 .env

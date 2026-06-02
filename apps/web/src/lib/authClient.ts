@@ -5,9 +5,9 @@
 import { createAuthClient } from 'better-auth/react';
 
 export const authClient = createAuthClient({
-  // Points directly at the Express API server
-  // (cookies are sent cross-origin with `credentials: include`)
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
+  // Points directly at the proxy (Vite locally, NGINX in production)
+  // which forwards /api to the Express backend.
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
 // Named exports for convenient imports throughout the app

@@ -1,0 +1,7 @@
+.git
+.turbo
+node_modules
+dist
+out
+.env
+.DS_Store

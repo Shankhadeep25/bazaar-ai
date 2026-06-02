@@ -14,11 +14,6 @@
       "@shopsense/db": ["../../packages/db/src/index.ts"]
     }
   },
-  "references": [
-    { "path": "../../packages/rag-core" },
-    { "path": "../../packages/cache" },
-    { "path": "../../packages/db" }
-  ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

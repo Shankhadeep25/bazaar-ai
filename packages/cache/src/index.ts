@@ -103,3 +103,6 @@ export async function disconnectRedis(): Promise<void> {
     isConnected = false;
   }
 }
+
+export * from './embeddingCache';
+export * from './rateLimiter';

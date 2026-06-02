@@ -3,7 +3,7 @@
 // Integrates with L2 embedding cache to avoid re-embedding identical content.
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { getCachedEmbedding, setCachedEmbedding } from '@shopsense/cache/src/embeddingCache';
+import { getCachedEmbedding, setCachedEmbedding } from '@shopsense/cache';
 import { getContentHash } from './chunker';
 
 let genAI: GoogleGenerativeAI | null = null;

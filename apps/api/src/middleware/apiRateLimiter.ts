@@ -3,7 +3,7 @@
 // Falls back to an in-memory sliding window when Redis is unavailable.
 
 import { Request, Response, NextFunction } from 'express';
-import { consumeToken } from '@shopsense/cache/src/rateLimiter';
+import { consumeToken } from '@shopsense/cache';
 
 // ─── In-Memory Fallback ──────────────────────────────────────────────────────
 // Used when Redis is down. Simple sliding window counter per IP.

@@ -6,13 +6,7 @@
     "module": "CommonJS",
     "moduleResolution": "Node",
     "ignoreDeprecations": "6.0",
-    "types": ["node"],
-    "paths": {
-      "@shopsense/rag-core": ["../../packages/rag-core/src/index.ts"],
-      "@shopsense/cache": ["../../packages/cache/src/index.ts"],
-      "@shopsense/cache/*": ["../../packages/cache/src/*"],
-      "@shopsense/db": ["../../packages/db/src/index.ts"]
-    }
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

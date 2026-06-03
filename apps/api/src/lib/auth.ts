@@ -9,6 +9,7 @@ import { MongoClient } from 'mongodb';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/shopsense';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const BETTER_AUTH_URL = process.env.BETTER_AUTH_URL || 'http://localhost:3001';
 
 console.log('[DEBUG] MONGODB_URI in auth.ts:', process.env.MONGODB_URI ? 'DEFINED' : 'UNDEFINED');
 console.log('[DEBUG] BETTER_AUTH_SECRET in auth.ts:', process.env.BETTER_AUTH_SECRET ? 'DEFINED' : 'UNDEFINED');
@@ -49,7 +50,12 @@ export const auth = betterAuth({
   },
 
   // ─── Trusted Origins ────────────────────────────────────────────────────────
-  trustedOrigins: [FRONTEND_URL],
+  // Must include both the frontend origin (port 80) and the API's own origin
+  // (port 3001) so Google's OAuth callback isn't rejected.
+  trustedOrigins: [
+    FRONTEND_URL,
+    BETTER_AUTH_URL,
+  ],
 });
 
 export type Auth = typeof auth;

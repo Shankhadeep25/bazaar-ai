@@ -17,6 +17,12 @@ COPY --from=builder /app/out/package-lock.json ./package-lock.json
 RUN npm ci
 
 COPY --from=builder /app/out/full/ .
+
+# VITE_* vars are baked into the JS bundle at build time — they must be
+# passed as build args, NOT as runtime env vars.
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
+
 RUN npx turbo run build --filter=web...
 
 FROM nginx:alpine AS runner

@@ -66,5 +66,11 @@ jobs:
           file: ./apps/web/Dockerfile
           push: true
           tags: shankhadeep25/shopsense-web:latest
+          # VITE_* vars are compile-time: they must be passed as build args
+          # so they get embedded into the Vite bundle during the Docker build.
+          # Add VITE_API_URL to your GitHub repo Secrets (Settings > Secrets).
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
           cache-from: type=registry,ref=shankhadeep25/shopsense-web:buildcache
           cache-to: type=registry,ref=shankhadeep25/shopsense-web:buildcache,mode=max
+

@@ -62,13 +62,13 @@ function extractBudget(query: string): { amount: number | null; type: 'under' | 
 // ─── Category Detection ─────────────────────────────────────────────────────
 
 const CATEGORY_KEYWORDS: Record<ProductCategory, RegExp> = {
-  laptop: /\b(laptop|macbook|notebook|chromebook|ultrabook|thinkpad|gaming laptop)\b/i,
-  phone: /\b(phone|mobile|smartphone|iphone|android phone|cell phone)\b/i,
-  tablet: /\b(tablet|ipad|tab|galaxy tab)\b/i,
-  headphones: /\b(headphone|earphone|earbud|earbuds|headset|airpod|TWS|neckband|over-ear|in-ear)\b/i,
-  camera: /\b(camera|dslr|mirrorless|gopro|action cam|webcam|digital camera)\b/i,
-  television: /\b(tv|television|smart tv|oled|qled|led tv)\b/i,
-  smartwatch: /\b(smartwatch|smart watch|apple watch|fitness band|fitness tracker)\b/i,
+  laptop: /\b(laptop|macbook|notebook|chromebook|ultrabook|thinkpad|gaming laptop)s?\b/i,
+  phone: /\b(phone|mobile|smartphone|iphone|android phone|cell phone)s?\b/i,
+  tablet: /\b(tablet|ipad|tab|galaxy tab)s?\b/i,
+  headphones: /\b(headphone|earphone|earbud|earbuds|headset|airpod|TWS|neckband|over-ear|in-ear)s?\b/i,
+  camera: /\b(camera|dslr|mirrorless|gopro|action cam|webcam|digital camera)s?\b/i,
+  television: /\b(tv|television|smart tv|oled|qled|led tv)s?\b/i,
+  smartwatch: /\b(smartwatch|smart watch|apple watch|fitness band|fitness tracker)(es|s)?\b/i,
   general: /(?!)/, // never matches — fallback only
 };
 

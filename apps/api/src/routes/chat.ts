@@ -90,10 +90,23 @@ router.post('/', async (req: Request, res: Response) => {
           },
           abortController.signal
         )
-      ) as { message: string; intent: string; retrievedChunkIds: string[]; products?: UnifiedProduct[] };
+      ) as { message: string; intent: string; retrievedChunkIds: string[]; productIds?: string[]; products?: UnifiedProduct[] };
+
+      // If this is a follow up and we have matched product IDs, fetch the full product details
+      // from the last search in this session and filter them.
+      if (result.intent !== 'new_search' && !result.products && result.productIds && result.productIds.length > 0) {
+        const lastTurn = await ChatTurn.findOne({
+          sessionId,
+          products: { $exists: true, $not: { $size: 0 } }
+        }).sort({ timestamp: -1 });
+
+        if (lastTurn && lastTurn.products) {
+          result.products = lastTurn.products.filter((p: any) => result.productIds!.includes(p.id));
+        }
+      }
 
       if (!clientDisconnected) {
-        if (result.products) {
+        if (result.products && result.products.length > 0) {
           res.write(`data: ${JSON.stringify({ type: 'products', content: result.products })}\n\n`);
         }
         res.write(`data: ${JSON.stringify({ type: 'done', intent: result.intent })}\n\n`);
@@ -107,7 +120,18 @@ router.post('/', async (req: Request, res: Response) => {
       // ── Concurrency-guarded pipeline execution ─────────────────────────
       const result = await pipelineGuard.run(() =>
         processChat({ sessionId, message, history }, abortController.signal)
-      ) as { message: string; intent: string; retrievedChunkIds: string[]; products?: UnifiedProduct[] };
+      ) as { message: string; intent: string; retrievedChunkIds: string[]; productIds?: string[]; products?: UnifiedProduct[] };
+
+      if (result.intent !== 'new_search' && !result.products && result.productIds && result.productIds.length > 0) {
+        const lastTurn = await ChatTurn.findOne({
+          sessionId,
+          products: { $exists: true, $not: { $size: 0 } }
+        }).sort({ timestamp: -1 });
+
+        if (lastTurn && lastTurn.products) {
+          result.products = lastTurn.products.filter((p: any) => result.productIds!.includes(p.id));
+        }
+      }
 
       // ✅ Fix: persist turns safely — never crashes the process
       await persistTurns(sessionId, message, result);

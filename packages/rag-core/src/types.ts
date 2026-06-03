@@ -119,6 +119,7 @@ export interface ChatResponse {
   products?: UnifiedProduct[];
   intent: Intent;
   retrievedChunkIds: string[];
+  productIds?: string[];
 }
 
 // ─── Session ─────────────────────────────────────────────────────────────────

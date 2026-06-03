@@ -105,7 +105,7 @@ async function retrieveContext(
   query: string,
   sessionId: string,
   topK: number = DEFAULT_RAG_CONFIG.topK
-): Promise<{ context: string; chunkIds: string[] }> {
+): Promise<{ context: string; chunkIds: string[]; productIds: string[] }> {
   const queryEmbedding = await embedText(query);
 
   const filter = {
@@ -128,6 +128,7 @@ async function retrieveContext(
     return {
       context: `[Note: Low confidence results]\n\n${context}`,
       chunkIds: bestMatches.map((m) => m.id),
+      productIds: [...new Set(bestMatches.map((m) => m.payload.product_id))],
     };
   }
 
@@ -135,6 +136,7 @@ async function retrieveContext(
   return {
     context,
     chunkIds: goodMatches.map((m) => m.id),
+    productIds: [...new Set(goodMatches.map((m) => m.payload.product_id))],
   };
 }
 
@@ -193,7 +195,7 @@ export async function processChat(
   // Step 3: Retrieve relevant context
   checkAborted(signal);
   console.log('[RAG] Step 3: Retrieving context...');
-  const { context, chunkIds: retrievedIds } = await retrieveContext(
+  const { context, chunkIds: retrievedIds, productIds } = await retrieveContext(
     message,
     sessionId
   );
@@ -203,6 +205,9 @@ export async function processChat(
   // Step 4: Build full context with metadata
   let fullContext = context;
   if (products && products.length > 0) {
+    // Filter the products array to ONLY include those that were deemed relevant by Qdrant
+    products = products.filter((p) => productIds.includes(p.id));
+    
     const metadataCtx = buildMetadataContext(products);
     fullContext = `Available Products:\n${metadataCtx}\n\n---\n\nDetailed Information:\n${context}`;
   }
@@ -241,6 +246,7 @@ export async function processChat(
     products,
     intent,
     retrievedChunkIds: chunkIds,
+    productIds,
   };
 }
 
@@ -272,11 +278,13 @@ export async function processStreamChat(
   }
 
   checkAborted(signal);
-  const { context, chunkIds: retrievedIds } = await retrieveContext(message, sessionId);
+  const { context, chunkIds: retrievedIds, productIds } = await retrieveContext(message, sessionId);
   chunkIds = [...chunkIds, ...retrievedIds];
 
   let fullContext = context;
   if (products && products.length > 0) {
+    // Filter the products array to ONLY include those that were deemed relevant by Qdrant
+    products = products.filter((p) => productIds.includes(p.id));
     fullContext = `Available Products:\n${buildMetadataContext(products)}\n\n---\n\nDetailed Information:\n${context}`;
   }
 
@@ -320,6 +328,7 @@ export async function processStreamChat(
     products,
     intent,
     retrievedChunkIds: chunkIds,
+    productIds,
   };
 }
 

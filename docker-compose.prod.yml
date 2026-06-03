@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  api:
+    image: shankhadeep25/shopsense-api:latest
+    restart: always
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env.prod
+    depends_on:
+      - redis
+    networks:
+      - shopsense-net
+
+  web:
+    image: shankhadeep25/shopsense-web:latest
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - shopsense-net
+
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - shopsense-net
+    volumes:
+      - redis_data:/data
+
+networks:
+  shopsense-net:
+
+volumes:
+  redis_data:

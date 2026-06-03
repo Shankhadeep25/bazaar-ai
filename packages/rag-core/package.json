@@ -12,6 +12,7 @@
     "@langchain/core": "^1.1.46",
     "@langchain/google-genai": "^2.1.30",
     "@qdrant/js-client-rest": "^1.18.0",
+    "@shopsense/cache": "*",
     "groq-sdk": "^0.9.1"
   }
 }

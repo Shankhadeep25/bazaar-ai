@@ -2,7 +2,7 @@
 // Caches embedding vectors by MD5 hash of text content.
 // TTL: 24 hours. Prevents re-embedding identical chunks.
 
-import { cacheGet, cacheSet } from './index';
+import { cacheGet, cacheSet } from './redis.js';
 
 const EMBEDDING_TTL = 86400; // 24 hours in seconds
 const KEY_PREFIX = 'emb';

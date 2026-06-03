@@ -2,7 +2,7 @@
 // Redis-backed rate limiter. Per-key (e.g., per associate tag).
 // Falls back to allowing all requests if Redis is unavailable.
 
-import { getRedisClient, isRedisConnected } from './index';
+import { getRedisClient, isRedisConnected } from './redis.js';
 
 interface RateLimiterConfig {
   maxTokens: number;

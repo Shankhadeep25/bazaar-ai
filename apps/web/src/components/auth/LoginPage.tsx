@@ -86,7 +86,7 @@ export default function LoginPage() {
     clearError();
     setGoogleLoading(true);
     try {
-      await signIn.social({ provider: 'google', callbackURL: window.location.origin + '/home' });
+      await signIn.social({ provider: 'google', callbackURL: '/home' });
     } catch {
       setError('Google sign-in failed. Please try again.');
       setGoogleLoading(false);

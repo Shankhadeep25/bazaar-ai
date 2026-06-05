@@ -36,7 +36,10 @@
 
 ## 🖼️ Demo / Screenshot
 
-> A live demo is coming soon. In the meantime, clone the repo and run it locally using the [Getting Started](#-getting-started) guide below.
+🌐 **Live Demo:** `http://ec2-3-107-177-241.ap-southeast-2.compute.amazonaws.com/`
+
+> [!IMPORTANT]
+> The server runs on plain **HTTP**. Most browsers will automatically upgrade the URL to HTTPS, which will fail. Please **manually type** the full URL starting with `http://` in the address bar instead of clicking the link above.
 
 ---
 
